@@ -165,7 +165,7 @@ export default function Dashboard() {
           </div>
 
           <div className="analyse-card">
-            <div className="card-label">Analyse IA</div>
+            <div className="card-label">Analyse</div>
             <div className="analyse-text">{menu.analyse}</div>
           </div>
 

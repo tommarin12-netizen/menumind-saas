@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
   <div style="max-width:520px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(28,17,9,.08);">
     <div style="background:linear-gradient(135deg,#c75c32,#e8874a);padding:32px;text-align:center;">
       <h1 style="margin:0;color:#fff;font-size:28px;font-weight:400;font-style:italic;">Menu<strong style="font-style:normal;">Mind</strong></h1>
-      <p style="margin:8px 0 0;color:rgba(255,255,255,.85);font-size:14px;">Votre IA culinaire est pr&ecirc;te</p>
+      <p style="margin:8px 0 0;color:rgba(255,255,255,.85);font-size:14px;">Votre assistant culinaire est pr&ecirc;t</p>
     </div>
     <div style="padding:36px 32px;">
       <h2 style="margin:0 0 12px;font-size:22px;color:#1c1109;font-weight:500;">Bienvenue !</h2>

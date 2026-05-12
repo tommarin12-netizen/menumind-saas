@@ -23,7 +23,7 @@ export default function LandingPage() {
   const FEATURES = [
     'Génération illimitée de menus',
     '5 jours · Midi & Dîner',
-    'Analyse IA + conseil du chef',
+    'Analyse + conseil du chef',
     'Adapté météo, budget, allergènes',
     'Support par email',
   ]
@@ -84,13 +84,13 @@ export default function LandingPage() {
       <div className="section">
         <p className="sec-label">Fonctionnalités</p>
         <h2 className="sec-title">Tout ce dont vous avez <em>besoin</em></h2>
-        <p className="sec-sub">Conçu par des passionnés de restauration, optimisé par l&apos;IA.</p>
+        <p className="sec-sub">Conçu par des passionnés de restauration, optimisé pour vous.</p>
         <div className="feats">
           {[
-            { icon: '🌦️', t: 'Adapté à la météo', d: "Menu chaud en hiver, léger en été. L'IA tient compte des conditions climatiques pour adapter les plats." },
+            { icon: '🌦️', t: 'Adapté à la météo', d: "Menu chaud en hiver, léger en été. MenuMind tient compte des conditions climatiques pour adapter les plats." },
             { icon: '💰', t: 'Contrôle du budget', d: 'Définissez votre coût matière et MenuMind optimise chaque plat pour rester dans vos marges.' },
             { icon: '🌿', t: 'Gestion des allergènes', d: 'Spécifiez les allergènes à exclure. Le menu généré en tient compte automatiquement.' },
-            { icon: '📊', t: 'Analyse IA incluse', d: "Chaque menu est accompagné d'une analyse de rentabilité et d'un conseil du chef personnalisé." },
+            { icon: '📊', t: 'Analyse incluse', d: "Chaque menu est accompagné d'une analyse de rentabilité et d'un conseil du chef personnalisé." },
             { icon: '🍽️', t: 'Midi & Soir séparés', d: 'Deux services, deux ambiances. MenuMind génère entrée, plat et dessert pour chaque service.' },
             { icon: '⚡', t: 'Résultat en 30 secondes', d: "Pas d'attente. Votre planning de la semaine est prêt en quelques secondes." },
           ].map((f) => (
