@@ -4,6 +4,8 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { Resend } from 'resend'
 import Stripe from 'stripe'
 
+export const dynamic = 'force-dynamic'
+
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: NextRequest) {
@@ -74,7 +76,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: `MenuMind <${process.env.RESEND_FROM_EMAIL}>`,
       to: email,
-      subject: '🍽️ Bienvenue sur MenuMind — Votre accès est prêt',
+      subject: 'Bienvenue sur MenuMind - Votre acces est pret',
       html: `
 <!DOCTYPE html>
 <html lang="fr">
@@ -83,23 +85,23 @@ export async function POST(req: NextRequest) {
   <div style="max-width:520px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(28,17,9,.08);">
     <div style="background:linear-gradient(135deg,#c75c32,#e8874a);padding:32px;text-align:center;">
       <h1 style="margin:0;color:#fff;font-size:28px;font-weight:400;font-style:italic;">Menu<strong style="font-style:normal;">Mind</strong></h1>
-      <p style="margin:8px 0 0;color:rgba(255,255,255,.85);font-size:14px;">Votre IA culinaire est prête</p>
+      <p style="margin:8px 0 0;color:rgba(255,255,255,.85);font-size:14px;">Votre IA culinaire est pr&ecirc;te</p>
     </div>
     <div style="padding:36px 32px;">
       <h2 style="margin:0 0 12px;font-size:22px;color:#1c1109;font-weight:500;">Bienvenue !</h2>
       <p style="margin:0 0 8px;font-size:15px;color:#5a3d28;line-height:1.7;">
-        Merci pour votre abonnement <strong>${planLabel}</strong>. Votre accès à <strong>MenuMind</strong> est activé.
+        Merci pour votre abonnement <strong>${planLabel}</strong>. Votre acc&egrave;s &agrave; <strong>MenuMind</strong> est activ&eacute;.
       </p>
       <p style="margin:0 0 28px;font-size:15px;color:#5a3d28;line-height:1.7;">
-        Cliquez sur le bouton ci-dessous pour accéder à votre espace :
+        Cliquez sur le bouton ci-dessous pour acc&eacute;der &agrave; votre espace :
       </p>
       <div style="text-align:center;margin-bottom:28px;">
         <a href="${loginUrl}" style="display:inline-block;background:#c75c32;color:#fff;text-decoration:none;font-weight:600;font-size:15px;padding:14px 36px;border-radius:12px;box-shadow:0 4px 16px rgba(199,92,50,.3);">
-          Accéder à MenuMind →
+          Acc&eacute;der &agrave; MenuMind &rarr;
         </a>
       </div>
       <p style="margin:0 0 4px;font-size:12px;color:#9a7860;text-align:center;">
-        Ce lien est valable 24h. Si vous ne l'avez pas demandé, ignorez cet email.
+        Ce lien est valable 24h. Si vous ne l&apos;avez pas demand&eacute;, ignorez cet email.
       </p>
     </div>
     <div style="background:#f0e9e0;padding:18px 32px;text-align:center;">
