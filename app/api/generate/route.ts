@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+export const dynamic = 'force-dynamic'
 
 const SYSTEM_PROMPT = `Tu es un chef consultant expert en gestion de restaurant. Tu génères des menus de la semaine professionnels et optimisés.
 
@@ -35,6 +35,8 @@ Règles :
 - Retourne UNIQUEMENT le JSON, sans texte avant ou après`
 
 export async function POST(req: NextRequest) {
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
   // Vérifier l'authentification
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

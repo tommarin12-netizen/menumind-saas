@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   const { plan } = await req.json()
   const isAnnual = plan === 'annual'
