@@ -6,6 +6,7 @@ export const runtime = 'nodejs'
 
 const SECRET = 'mm_creator_tom_2024'
 const CREATOR_EMAIL = 'tom.marin12@gmail.com'
+const CREATOR_PASSWORD = 'MenuMindTom2024!'
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token')
@@ -17,30 +18,17 @@ export async function GET(req: NextRequest) {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!url || !key) {
-    return NextResponse.json({
-      error: 'Env vars manquantes',
-      url: !!url,
-      key: !!key,
-    }, { status: 500 })
+    return NextResponse.json({ error: 'Env vars manquantes', url: !!url, key: !!key }, { status: 500 })
   }
 
   const supabase = createClient(url, key, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
-  // Priorité : header host (toujours correct sur Vercel), fallback env var
-  const host = req.headers.get('host') ?? ''
-  const proto = req.headers.get('x-forwarded-proto') ?? 'https'
-  const origin = host && !host.includes('localhost')
-    ? `${proto}://${host}`
-    : (process.env.NEXT_PUBLIC_APP_URL ?? 'https://menumind-saas-fh4c.vercel.app')
-
   // Récupère ou crée le user
   let userId: string
   const { data: listData, error: listErr } = await supabase.auth.admin.listUsers()
-  if (listErr) {
-    return NextResponse.json({ error: `listUsers: ${listErr.message}` }, { status: 500 })
-  }
+  if (listErr) return NextResponse.json({ error: `listUsers: ${listErr.message}` }, { status: 500 })
 
   const existing = listData?.users?.find(u => u.email === CREATOR_EMAIL)
 
@@ -50,6 +38,7 @@ export async function GET(req: NextRequest) {
     const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
       email: CREATOR_EMAIL,
       email_confirm: true,
+      password: CREATOR_PASSWORD,
     })
     if (createErr || !newUser?.user) {
       return NextResponse.json({ error: `createUser: ${createErr?.message}` }, { status: 500 })
@@ -57,7 +46,14 @@ export async function GET(req: NextRequest) {
     userId = newUser.user.id
   }
 
-  // Upsert customers
+  // Met à jour le password (dans tous les cas, même si le user existait)
+  const { error: updateErr } = await supabase.auth.admin.updateUserById(userId, {
+    password: CREATOR_PASSWORD,
+    email_confirm: true,
+  })
+  if (updateErr) return NextResponse.json({ error: `updateUser: ${updateErr.message}` }, { status: 500 })
+
+  // Upsert accès premium
   await supabase.from('customers').upsert({
     user_id: userId,
     email: CREATOR_EMAIL,
@@ -67,31 +63,12 @@ export async function GET(req: NextRequest) {
     plan: 'annual',
   }, { onConflict: 'email' })
 
-  // Génère le magic link
-  const { data, error } = await supabase.auth.admin.generateLink({
-    type: 'magiclink',
-    email: CREATOR_EMAIL,
-    options: { redirectTo: `${origin}/auth/callback?next=/dashboard` },
-  })
+  // Redirige vers la page de connexion automatique
+  const host = req.headers.get('host') ?? ''
+  const proto = req.headers.get('x-forwarded-proto') ?? 'https'
+  const origin = host && !host.includes('localhost')
+    ? `${proto}://${host}`
+    : (process.env.NEXT_PUBLIC_APP_URL ?? 'https://menumind-saas-fh4c.vercel.app')
 
-  if (error || !data?.properties?.action_link) {
-    return NextResponse.json({ error: `generateLink: ${error?.message}` }, { status: 500 })
-  }
-
-  const link = data.properties.action_link
-
-  // Affiche le lien cliquable (pas de redirect pour éviter les problèmes)
-  return new NextResponse(
-    `<!DOCTYPE html><html><head><meta charset="utf-8"><title>MenuMind Admin</title>
-    <style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f7f3ee;}
-    .box{background:#fff;border-radius:16px;padding:40px;max-width:500px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.1);}
-    h2{margin:0 0 16px;color:#1c1109;}p{color:#9a7860;font-size:14px;margin-bottom:24px;}
-    a{display:inline-block;background:#c75c32;color:#fff;text-decoration:none;padding:14px 32px;border-radius:12px;font-weight:600;font-size:15px;}
-    </style></head><body><div class="box">
-    <h2>✅ Compte créateur prêt</h2>
-    <p>Clique sur le bouton ci-dessous pour accéder au dashboard.<br>Lien valable 1h.</p>
-    <a href="${link}">Accéder à MenuMind →</a>
-    </div></body></html>`,
-    { headers: { 'Content-Type': 'text/html' } }
-  )
+  return NextResponse.redirect(`${origin}/god-mode`)
 }
