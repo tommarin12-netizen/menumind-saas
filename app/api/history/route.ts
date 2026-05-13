@@ -21,6 +21,25 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, id: inserted?.id })
 }
 
+// Supprimer un menu de l'historique
+export async function DELETE(req: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
+  const { id } = await req.json()
+  if (!id) return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
+
+  const { error } = await supabase
+    .from('menus')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id) // sécurité : l'utilisateur ne peut supprimer que ses propres menus
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
+}
+
 // Récupérer l'historique
 export async function GET() {
   const supabase = await createClient()

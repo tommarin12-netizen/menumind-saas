@@ -48,6 +48,7 @@ export default function Dashboard() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [profileSaved, setProfileSaved] = useState(false)
   const [recipeTarget, setRecipeTarget] = useState<string | null>(null)
   const [showShopping, setShowShopping] = useState(false)
@@ -91,6 +92,17 @@ export default function Dashboard() {
   useEffect(() => {
     if (activeTab === 'historique') loadHistory()
   }, [activeTab])
+
+  async function deleteMenu(id: string) {
+    await fetch('/api/history', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    setHistory(prev => prev.filter(h => h.id !== id))
+    setConfirmDeleteId(null)
+    if (expandedId === id) setExpandedId(null)
+  }
 
   async function logout() {
     await supabase.auth.signOut()
@@ -617,14 +629,37 @@ export default function Dashboard() {
                         {item.menu?.economie && (
                           <span className="hist-eco">{item.menu.economie} épargnés</span>
                         )}
-                        {/* Bouton Ouvrir visible directement */}
-                        <button
-                          className="btn-accent"
-                          style={{ fontSize: 12, padding: '6px 14px', borderRadius: 'var(--r8)' }}
-                          onClick={e => { e.stopPropagation(); ouvrirMenu() }}
-                        >
-                          Ouvrir →
-                        </button>
+                        {confirmDeleteId === item.id ? (
+                          /* Confirmation inline */
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
+                            <span style={{ fontSize: 12, color: 'var(--ink2)', fontWeight: 500 }}>Supprimer ?</span>
+                            <button
+                              onClick={() => deleteMenu(item.id)}
+                              style={{ fontSize: 12, padding: '5px 12px', background: '#e63946', color: '#fff', border: 'none', borderRadius: 'var(--r8)', cursor: 'pointer', fontWeight: 600 }}
+                            >Oui</button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              style={{ fontSize: 12, padding: '5px 12px', background: 'rgba(0,0,0,.06)', color: 'var(--ink2)', border: 'none', borderRadius: 'var(--r8)', cursor: 'pointer' }}
+                            >Non</button>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Bouton Ouvrir visible directement */}
+                            <button
+                              className="btn-accent"
+                              style={{ fontSize: 12, padding: '6px 14px', borderRadius: 'var(--r8)' }}
+                              onClick={e => { e.stopPropagation(); ouvrirMenu() }}
+                            >
+                              Ouvrir →
+                            </button>
+                            {/* Bouton supprimer */}
+                            <button
+                              title="Supprimer ce menu"
+                              onClick={e => { e.stopPropagation(); setConfirmDeleteId(item.id) }}
+                              style={{ fontSize: 14, padding: '5px 9px', background: 'rgba(230,57,70,.08)', color: '#e63946', border: '1px solid rgba(230,57,70,.2)', borderRadius: 'var(--r8)', cursor: 'pointer', lineHeight: 1 }}
+                            >🗑</button>
+                          </>
+                        )}
                         <span className="hist-chevron">{isOpen ? '▲' : '▼'}</span>
                       </div>
                     </div>
