@@ -26,12 +26,20 @@ export default function Dashboard() {
   const [jourActif, setJourActif] = useState('Lundi')
   const [svcActif, setSvcActif] = useState<'midi' | 'soir'>('midi')
   const [userEmail, setUserEmail] = useState('')
+  const [firstVisit, setFirstVisit] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) setUserEmail(data.user.email ?? '')
+      if (data.user) {
+        setUserEmail(data.user.email ?? '')
+        const key = `mm_welcomed_${data.user.id}`
+        if (!localStorage.getItem(key)) {
+          localStorage.setItem(key, '1')
+          setFirstVisit(true)
+        }
+      }
     })
   }, [])
 
@@ -95,6 +103,24 @@ export default function Dashboard() {
           <button className="btn-ghost" onClick={logout}>Déconnexion</button>
         </div>
       </nav>
+
+      {firstVisit && (
+        <div className="welcome-banner">
+          <button className="welcome-close" onClick={() => setFirstVisit(false)}>✕</button>
+          <div className="welcome-inner">
+            <span style={{ fontSize: 32 }}>👋</span>
+            <div>
+              <div className="welcome-title">Bienvenue sur MenuMind !</div>
+              <div className="welcome-sub">Remplissez le formulaire ci-dessous et générez votre premier menu de la semaine en 30 secondes.</div>
+            </div>
+          </div>
+          <div className="welcome-steps">
+            <div className="ws"><span>1</span>Renseignez votre restaurant</div>
+            <div className="ws"><span>2</span>Indiquez vos stocks à écouler</div>
+            <div className="ws"><span>3</span>Cliquez sur Générer 🚀</div>
+          </div>
+        </div>
+      )}
 
       {!menu ? (
         <div className="dash-content">

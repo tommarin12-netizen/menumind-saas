@@ -1,12 +1,12 @@
 'use client'
 import { useState } from 'react'
 
-type Plan = 'monthly' | 'annual'
+type Plan = 'monthly' | 'annual' | 'free'
 
 interface Props {
   onClose: () => void
   onSelect: (plan: Plan) => void
-  loading: Plan | null
+  loading: 'monthly' | 'annual' | null
 }
 
 const STEPS = [
@@ -66,6 +66,24 @@ export default function PlanModal({ onClose, onSelect, loading }: Props) {
               <p className="modal-roi-sub">
                 MenuMind se rentabilise en <strong>moins de 5 jours.</strong> Sérieusement.
               </p>
+            </div>
+
+            {/* Gratuit */}
+            <div className="modal-free-strip" onClick={() => onSelect('free')}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 20 }}>👀</span>
+                <div>
+                  <span className="modal-free-label">Juste jeter un œil</span>
+                  <span className="modal-free-sub"> — Gratuit, sans compte</span>
+                </div>
+              </div>
+              <span className="modal-free-arrow">→</span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0 12px' }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              <span style={{ fontSize: 11, color: 'var(--ink3)', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' }}>ou choisir un plan</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
             </div>
 
             <div className="modal-plans">

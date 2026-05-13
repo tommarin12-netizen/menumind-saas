@@ -7,8 +7,12 @@ export default function LandingPage() {
   const [loading, setLoading] = useState<'monthly' | 'annual' | null>(null)
   const [showModal, setShowModal] = useState(false)
 
-  async function handleBuy(plan: 'monthly' | 'annual') {
+  async function handleBuy(plan: 'monthly' | 'annual' | 'free') {
     setShowModal(false)
+    if (plan === 'free') {
+      window.location.href = '/demo'
+      return
+    }
     setLoading(plan)
     try {
       const res = await fetch('/api/checkout', {
