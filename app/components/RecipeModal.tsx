@@ -24,6 +24,19 @@ export default function RecipeModal({ plat, cuisine, couverts, stocks, onClose }
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [userStars, setUserStars] = useState(0)
+  const [hoverStars, setHoverStars] = useState(0)
+  const [rated, setRated] = useState(false)
+
+  async function submitRating(stars: number) {
+    setUserStars(stars)
+    setRated(true)
+    await fetch('/api/ratings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dish_name: plat, stars, cuisine }),
+    })
+  }
 
   useEffect(() => {
     fetch('/api/recipe', {
@@ -122,6 +135,30 @@ export default function RecipeModal({ plat, cuisine, couverts, stocks, onClose }
                   <span>🍷</span> {recipe.vin}
                 </div>
               )}
+
+              {/* Notation */}
+              <div className="recipe-rating-row">
+                {rated ? (
+                  <div className="rating-thanks">
+                    {'★'.repeat(userStars)}{'☆'.repeat(5 - userStars)} Merci pour votre avis !
+                  </div>
+                ) : (
+                  <>
+                    <span className="rating-label">Noter cette recette :</span>
+                    <div className="stars-row">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <button
+                          key={s}
+                          className={`star-btn${(hoverStars || userStars) >= s ? ' lit' : ''}`}
+                          onMouseEnter={() => setHoverStars(s)}
+                          onMouseLeave={() => setHoverStars(0)}
+                          onClick={() => submitRating(s)}
+                        >★</button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
 
               {/* Actions */}
               <div className="recipe-actions">

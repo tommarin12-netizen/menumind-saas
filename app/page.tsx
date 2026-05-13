@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import PlanModal from './components/PlanModal'
 
 export default function LandingPage() {
@@ -26,6 +26,12 @@ export default function LandingPage() {
       setLoading(null)
     }
   }
+
+  const [ratings, setRatings] = useState<{ avg: number; total: number; top: { name: string; avg: number; count: number }[] } | null>(null)
+
+  useEffect(() => {
+    fetch('/api/ratings').then(r => r.ok ? r.json() : null).then(d => d && setRatings(d))
+  }, [])
 
   const FEATURES = [
     'Génération illimitée de menus',
@@ -109,6 +115,31 @@ export default function LandingPage() {
           ))}
         </div>
       </div>
+
+      {ratings && ratings.total >= 1 && (
+        <div className="section" style={{ paddingTop: 0 }}>
+          <p className="sec-label">Avis restaurateurs</p>
+          <h2 className="sec-title">Ce qu&apos;ils pensent des <em>recettes</em></h2>
+          <div className="ratings-hero">
+            <div className="ratings-score">
+              <div className="ratings-avg">{ratings.avg.toFixed(1)}</div>
+              <div className="ratings-stars">{'★'.repeat(Math.round(ratings.avg))}{'☆'.repeat(5 - Math.round(ratings.avg))}</div>
+              <div className="ratings-total">{ratings.total} recette{ratings.total > 1 ? 's' : ''} notée{ratings.total > 1 ? 's' : ''}</div>
+            </div>
+            {ratings.top.length > 0 && (
+              <div className="ratings-top">
+                {ratings.top.map((r, i) => (
+                  <div key={i} className="ratings-top-item">
+                    <div className="ratings-top-stars">{'★'.repeat(Math.round(r.avg))}</div>
+                    <div className="ratings-top-name">{r.name}</div>
+                    <div className="ratings-top-count">{r.count} avis</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="section" id="pricing">
         <p className="sec-label">Tarifs</p>

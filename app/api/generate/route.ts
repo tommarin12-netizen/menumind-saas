@@ -66,17 +66,29 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
-  const { restaurant, cuisine, stocks, meteo, couverts, budget, allergenes } = body
+  const { restaurant, cuisine, stocks, meteo, couverts, budget, allergenes, nb_midi, nb_soir } = body
+
+  const nMidi = parseInt(nb_midi ?? '5', 10)
+  const nSoir = parseInt(nb_soir ?? '5', 10)
+  const JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi']
+
+  // Construit la liste des jours/services à générer
+  const servicesLine = nMidi === 5 && nSoir === 5
+    ? 'Génère le menu complet : Lundi à Vendredi, midi et soir.'
+    : `Génère exactement ${nMidi} déjeuner(s) et ${nSoir} dîner(s).
+- Pour les déjeuners : utilise les ${nMidi} premiers jours (${JOURS.slice(0, nMidi).join(', ')}).
+- Pour les dîners : utilise les ${nSoir} premiers jours (${JOURS.slice(0, nSoir).join(', ')}).
+- Les jours sans service doivent quand même apparaître dans le JSON avec l'objet vide correspondant ({}).`
 
   const userPrompt = `Restaurant : ${restaurant}
 Type de cuisine : ${cuisine}
 ${meteo ? `Météo de la semaine : ${meteo}` : ''}
-${stocks ? `Stocks / produits à écouler : ${stocks}` : ''}
+${stocks ? `Stocks / produits à écouler (priorité absolue) : ${stocks}` : ''}
 ${couverts ? `Nombre de couverts / jour : ${couverts}` : ''}
 ${budget ? `Budget matière : ${budget}` : ''}
 ${allergenes ? `Allergènes à exclure : ${allergenes}` : ''}
 
-Génère le menu de la semaine complet (Lundi à Vendredi, midi et soir).`
+${servicesLine}`
 
   try {
     const response = await anthropic.messages.create({

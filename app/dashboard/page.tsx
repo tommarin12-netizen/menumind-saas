@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [form, setForm] = useState({
     restaurant: '', cuisine: 'Française', stocks: '',
     meteo: '', couverts: '', budget: '', allergenes: '',
+    nb_midi: '5', nb_soir: '5',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -234,6 +235,35 @@ export default function Dashboard() {
               <div className="f-group full">
                 <label className="f-label">Allergènes à exclure</label>
                 <input className="inp" value={form.allergenes} onChange={e => set('allergenes', e.target.value)} placeholder="Gluten, noix, lactose…" />
+              </div>
+
+              {/* Sélection services */}
+              <div className="f-group full">
+                <label className="f-label">Nombre de services à générer</label>
+                <div className="services-row">
+                  <div className="service-picker">
+                    <span className="service-icon">☀️</span>
+                    <span className="service-label">Déjeuners</span>
+                    <div className="service-btns">
+                      {['0','1','2','3','4','5'].map(n => (
+                        <button key={n} type="button"
+                          className={`svc-n${form.nb_midi === n ? ' on' : ''}`}
+                          onClick={() => set('nb_midi', n)}>{n}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="service-picker">
+                    <span className="service-icon">🌙</span>
+                    <span className="service-label">Dîners</span>
+                    <div className="service-btns">
+                      {['0','1','2','3','4','5'].map(n => (
+                        <button key={n} type="button"
+                          className={`svc-n${form.nb_soir === n ? ' on' : ''}`}
+                          onClick={() => set('nb_soir', n)}>{n}</button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             {error && <div className="erreur" style={{ marginTop: 16 }}>{error}</div>}
