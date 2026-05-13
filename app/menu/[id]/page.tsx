@@ -52,7 +52,11 @@ export default async function PublicMenuPage({ params }: { params: Promise<{ id:
               <div style={{ display: 'grid', gridTemplateColumns: j?.midi?.plat && j?.soir?.plat ? '1fr 1fr' : '1fr', gap: 0 }}>
                 {j?.midi?.plat && (
                   <div style={{ padding: '16px 22px', borderRight: j?.soir?.plat ? '1px solid rgba(120,80,50,.08)' : 'none' }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#9a7860', marginBottom: 10 }}>☀️ Déjeuner {j.midi.prix && `· ${j.midi.prix}`}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#9a7860', marginBottom: 6 }}>☀️ Déjeuner</div>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                      {j.midi.cout_matiere && <span style={{ fontSize: 11, fontWeight: 600, color: '#b07340', background: 'rgba(154,106,16,.1)', border: '1px solid rgba(154,106,16,.2)', borderRadius: 100, padding: '3px 9px' }}>🧾 {j.midi.cout_matiere} coût</span>}
+                      {(j.midi.prix_vente ?? j.midi.prix) && <span style={{ fontSize: 11, fontWeight: 600, color: '#2d6a4f', background: 'rgba(45,106,79,.09)', border: '1px solid rgba(45,106,79,.2)', borderRadius: 100, padding: '3px 9px' }}>💰 {j.midi.prix_vente ?? j.midi.prix} vente</span>}
+                    </div>
                     {[{n:'Entrée',v:j.midi.entree},{n:'Plat',v:j.midi.plat},{n:'Dessert',v:j.midi.dessert}].map(c => c.v && (
                       <div key={c.n} style={{ marginBottom: 6 }}>
                         <div style={{ fontSize: 10, color: '#9a7860', textTransform: 'uppercase', letterSpacing: '.05em' }}>{c.n}</div>
@@ -63,7 +67,11 @@ export default async function PublicMenuPage({ params }: { params: Promise<{ id:
                 )}
                 {j?.soir?.plat && (
                   <div style={{ padding: '16px 22px' }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#9a7860', marginBottom: 10 }}>🌙 Dîner {j.soir.prix && `· ${j.soir.prix}`}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#9a7860', marginBottom: 6 }}>🌙 Dîner</div>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                      {j.soir.cout_matiere && <span style={{ fontSize: 11, fontWeight: 600, color: '#b07340', background: 'rgba(154,106,16,.1)', border: '1px solid rgba(154,106,16,.2)', borderRadius: 100, padding: '3px 9px' }}>🧾 {j.soir.cout_matiere} coût</span>}
+                      {(j.soir.prix_vente ?? j.soir.prix) && <span style={{ fontSize: 11, fontWeight: 600, color: '#2d6a4f', background: 'rgba(45,106,79,.09)', border: '1px solid rgba(45,106,79,.2)', borderRadius: 100, padding: '3px 9px' }}>💰 {j.soir.prix_vente ?? j.soir.prix} vente</span>}
+                    </div>
                     {[{n:'Entrée',v:j.soir.entree},{n:'Plat',v:j.soir.plat},{n:'Dessert',v:j.soir.dessert}].map(c => c.v && (
                       <div key={c.n} style={{ marginBottom: 6 }}>
                         <div style={{ fontSize: 10, color: '#9a7860', textTransform: 'uppercase', letterSpacing: '.05em' }}>{c.n}</div>

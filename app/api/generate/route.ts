@@ -29,8 +29,16 @@ Pour chaque demande, tu retournes UNIQUEMENT un JSON valide avec cette structure
   ],
   "jours": {
     "Lundi": {
-      "midi": { "entree": "nom du plat", "plat": "nom du plat", "dessert": "nom du plat", "prix": "fourchette ex: 14-16€" },
-      "soir": { "entree": "nom du plat", "plat": "nom du plat", "dessert": "nom du plat", "prix": "fourchette ex: 18-22€" }
+      "midi": {
+        "entree": "nom du plat", "plat": "nom du plat", "dessert": "nom du plat",
+        "cout_matiere": "coût total des ingrédients pour 1 couvert ex: 5-6€",
+        "prix_vente": "prix de vente conseillé au client ex: 15-17€"
+      },
+      "soir": {
+        "entree": "nom du plat", "plat": "nom du plat", "dessert": "nom du plat",
+        "cout_matiere": "coût total des ingrédients pour 1 couvert ex: 8-10€",
+        "prix_vente": "prix de vente conseillé au client ex: 24-28€"
+      }
     },
     "Mardi": { "midi": {}, "soir": {} },
     "Mercredi": { "midi": {}, "soir": {} },
@@ -42,6 +50,9 @@ Pour chaque demande, tu retournes UNIQUEMENT un JSON valide avec cette structure
 Règles :
 - Le champ "propositions" liste CHAQUE produit périssable/stock mentionné par le restaurateur, avec tous les plats de la semaine qui l'utilisent
 - Si aucun stock n'est mentionné, "propositions" = []
+- "cout_matiere" = coût réel des ingrédients bruts pour 1 couvert (entrée+plat+dessert), en €
+- "prix_vente" = prix de vente conseillé au client pour le menu complet (entrée+plat+dessert), en €
+- La marge brute doit être cohérente avec "couts.marge_brute_estimee"
 - Variété entre les jours (pas de répétitions)
 - Cohérence avec le type de cuisine indiqué
 - Tenir compte de la météo pour adapter les plats (chauds/légers)

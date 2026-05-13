@@ -164,9 +164,12 @@ select.inp{cursor:pointer;}
 .ts{font-size:13px;font-weight:500;padding:8px 20px;background:var(--glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--glass-border-subtle);color:var(--ink3);cursor:pointer;border-radius:var(--r8);transition:all .18s;}
 .ts.on{background:rgba(28,17,9,.08);color:var(--ink);border-color:var(--border2);font-weight:600;}
 .menu-card{background:var(--glass);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--glass-border);border-radius:var(--r20);padding:26px;margin-bottom:16px;box-shadow:var(--glass-sh);}
-.menu-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
-.menu-jour{font-family:'Fraunces',serif;font-size:22px;font-weight:400;font-style:italic;}
-.menu-prix{font-size:13px;color:var(--green);font-weight:600;background:var(--green-soft);padding:5px 12px;border-radius:100px;border:1px solid rgba(45,106,79,.15);}
+.menu-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;}
+.menu-jour{font-family:'Fraunces',serif;font-size:20px;font-weight:400;font-style:italic;padding-top:2px;}
+.menu-prix-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.menu-cout{display:flex;flex-direction:column;align-items:center;font-size:13px;color:var(--amber);font-weight:700;background:var(--amber-soft);padding:6px 12px;border-radius:var(--r12);border:1px solid rgba(154,106,16,.2);line-height:1.2;}
+.menu-prix{display:flex;flex-direction:column;align-items:center;font-size:13px;color:var(--green);font-weight:700;background:var(--green-soft);padding:6px 12px;border-radius:var(--r12);border:1px solid rgba(45,106,79,.2);line-height:1.2;}
+.menu-prix-label{font-size:9px;font-weight:500;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-top:1px;}
 .cours-row{display:flex;align-items:flex-start;gap:14px;padding:13px 0;border-bottom:1px solid rgba(120,80,50,.07);}
 .cours-row:last-child{border-bottom:none;padding-bottom:0;}
 .cours-num{width:26px;height:26px;background:linear-gradient(135deg,var(--accent-soft2),var(--accent-soft));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;margin-top:2px;border:1px solid rgba(199,92,50,.15);}

@@ -7,7 +7,7 @@ import ShoppingListModal from '@/app/components/ShoppingListModal'
 import { getProduitsSaison, getMoisLabel } from '@/lib/saison'
 
 type Jour = { midi: Service; soir: Service }
-type Service = { entree: string; plat: string; dessert: string; prix?: string }
+type Service = { entree: string; plat: string; dessert: string; cout_matiere?: string; prix_vente?: string; prix?: string }
 type Proposition = { produit: string; emoji: string; nb_plats: number; plats: string[] }
 type Couts = { cout_moyen_entree: string; cout_moyen_plat: string; cout_moyen_dessert: string; marge_brute_estimee: string; conseil_rentabilite: string }
 type MenuData = {
@@ -415,8 +415,21 @@ export default function Dashboard() {
           {svc && (
             <div className="menu-card print-hide">
               <div className="menu-head">
-                <span className="menu-jour">{jourActif}</span>
-                {svc.prix && <span className="menu-prix">{svc.prix}</span>}
+                <span className="menu-jour">{jourActif} · {svcActif === 'midi' ? '☀️ Déjeuner' : '🌙 Dîner'}</span>
+                <div className="menu-prix-row">
+                  {(svc.cout_matiere || svc.prix) && (
+                    <span className="menu-cout">
+                      🧾 {svc.cout_matiere ?? svc.prix}
+                      <span className="menu-prix-label">coût matière</span>
+                    </span>
+                  )}
+                  {svc.prix_vente && (
+                    <span className="menu-prix">
+                      {svc.prix_vente}
+                      <span className="menu-prix-label">prix de vente</span>
+                    </span>
+                  )}
+                </div>
               </div>
               {[
                 { nom: svc.entree, cat: 'Entrée' },
