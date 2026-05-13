@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react'
 
 type Item = { produit: string; quantite: string; note?: string }
 type Category = { nom: string; emoji: string; items: Item[] }
-type ShoppingList = { categories: Category[] }
+type Meta = { couverts_par_service: number; nb_services: number; total_couverts: number }
+type ShoppingList = { categories: Category[]; meta?: Meta }
 
 interface Props {
   menu: unknown
@@ -17,6 +18,7 @@ export default function ShoppingListModal({ menu, couverts, restaurant, onClose 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [checked, setChecked] = useState<Set<string>>(new Set())
+  const [showNotes, setShowNotes] = useState(false)
 
   useEffect(() => {
     fetch('/api/shopping-list', {
@@ -39,26 +41,55 @@ export default function ShoppingListModal({ menu, couverts, restaurant, onClose 
   }
 
   const total = list?.categories.reduce((s, c) => s + c.items.length, 0) ?? 0
+  const done = checked.size
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="shop-modal">
+
+        {/* Header */}
         <div className="shop-head">
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 4 }}>Liste de courses</div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 4 }}>
+              🛒 Liste de courses
+            </div>
             <h2 style={{ margin: 0, fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 400 }}>{restaurant}</h2>
-            {total > 0 && <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 2 }}>{total} références · {couverts || 50} couverts/service</div>}
+            {list?.meta && (
+              <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 4, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <span>👥 <strong style={{ color: 'var(--ink2)' }}>{list.meta.couverts_par_service}</strong> cvts/service</span>
+                <span>📅 <strong style={{ color: 'var(--ink2)' }}>{list.meta.nb_services}</strong> services</span>
+                <span>= <strong style={{ color: 'var(--accent)' }}>{list.meta.total_couverts}</strong> couverts total</span>
+              </div>
+            )}
+            {total > 0 && (
+              <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span>{total} références · {done > 0 && <span style={{ color: 'var(--green)', fontWeight: 600 }}>{done}/{total} cochés</span>}</span>
+                <button
+                  onClick={() => setShowNotes(n => !n)}
+                  style={{ fontSize: 10, background: 'rgba(255,255,255,.5)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 8px', cursor: 'pointer', color: 'var(--ink3)' }}
+                >
+                  {showNotes ? 'Masquer détails' : 'Voir calculs'}
+                </button>
+              </div>
+            )}
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button className="btn-ghost" style={{ fontSize: 12 }} onClick={() => window.print()}>🖨 Imprimer</button>
             <button className="modal-close" style={{ position: 'static' }} onClick={onClose}>✕</button>
           </div>
         </div>
 
+        {/* Calcul badge */}
+        {list?.meta && (
+          <div style={{ margin: '0 16px 4px', padding: '8px 14px', background: 'rgba(154,106,16,.08)', border: '1px solid rgba(154,106,16,.18)', borderRadius: 10, fontSize: 12, color: 'var(--amber)' }}>
+            ⚖️ Quantités calculées pour <strong>{list.meta.couverts_par_service} couverts × {list.meta.nb_services} services</strong> + 10% de marge
+          </div>
+        )}
+
         {loading && (
           <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--ink3)' }}>
             <span className="dots"><span /><span /><span /></span>
-            <div style={{ marginTop: 12, fontSize: 13 }}>Génération de la liste…</div>
+            <div style={{ marginTop: 12, fontSize: 13 }}>Calcul des quantités pour {couverts || '50'} couverts…</div>
           </div>
         )}
 
@@ -74,13 +105,15 @@ export default function ShoppingListModal({ menu, couverts, restaurant, onClose 
                 </div>
                 {cat.items.map((item, ii) => {
                   const key = `${ci}-${ii}`
-                  const done = checked.has(key)
+                  const isDone = checked.has(key)
                   return (
-                    <div key={ii} className={`shop-item${done ? ' done' : ''}`} onClick={() => toggle(key)}>
-                      <div className={`shop-check${done ? ' checked' : ''}`}>{done ? '✓' : ''}</div>
+                    <div key={ii} className={`shop-item${isDone ? ' done' : ''}`} onClick={() => toggle(key)}>
+                      <div className={`shop-check${isDone ? ' checked' : ''}`}>{isDone ? '✓' : ''}</div>
                       <div style={{ flex: 1 }}>
                         <span className="shop-produit">{item.produit}</span>
-                        {item.note && <span className="shop-note"> · {item.note}</span>}
+                        {showNotes && item.note && (
+                          <div className="shop-note" style={{ display: 'block', marginTop: 2 }}>{item.note}</div>
+                        )}
                       </div>
                       <span className="shop-qte">{item.quantite}</span>
                     </div>
@@ -88,6 +121,15 @@ export default function ShoppingListModal({ menu, couverts, restaurant, onClose 
                 })}
               </div>
             ))}
+
+            {done > 0 && (
+              <button
+                onClick={() => setChecked(new Set())}
+                style={{ width: '100%', marginTop: 8, padding: '10px', fontSize: 12, color: 'var(--ink3)', background: 'none', border: '1px dashed var(--border2)', borderRadius: 10, cursor: 'pointer' }}
+              >
+                Tout décocher
+              </button>
+            )}
           </div>
         )}
       </div>

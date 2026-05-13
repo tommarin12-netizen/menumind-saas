@@ -6,6 +6,13 @@ export const dynamic = 'force-dynamic'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+/** Parse "~80/j", "80", "80 couverts", "lundi 50, jeudi 120" → nombre entier */
+function parseCouverts(raw: string): number {
+  if (!raw) return 50
+  const digits = raw.match(/\d+/)
+  return digits ? Math.max(1, parseInt(digits[0], 10)) : 50
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -13,52 +20,90 @@ export async function POST(req: NextRequest) {
 
   const { menu, couverts, restaurant } = await req.json()
 
-  // Extraire tous les plats du menu
-  const plats: string[] = []
-  const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi']
-  for (const jour of jours) {
+  const nbCouverts = parseCouverts(couverts)
+  const JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi']
+
+  // Compter les services actifs et construire la liste des plats avec service + couverts
+  type PlatInfo = { plat: string; service: string; jour: string; couverts: number }
+  const plats: PlatInfo[] = []
+  let totalMidi = 0
+  let totalSoir = 0
+
+  for (const jour of JOURS) {
     const j = menu.jours?.[jour]
     if (!j) continue
-    if (j.midi?.entree) plats.push(`${j.midi.entree} (entrée midi ${jour})`)
-    if (j.midi?.plat) plats.push(`${j.midi.plat} (plat midi ${jour})`)
-    if (j.midi?.dessert) plats.push(`${j.midi.dessert} (dessert midi ${jour})`)
-    if (j.soir?.entree) plats.push(`${j.soir.entree} (entrée soir ${jour})`)
-    if (j.soir?.plat) plats.push(`${j.soir.plat} (plat soir ${jour})`)
-    if (j.soir?.dessert) plats.push(`${j.soir.dessert} (dessert soir ${jour})`)
+    const hasMidi = !!(j.midi?.plat)
+    const hasSoir = !!(j.soir?.plat)
+    if (hasMidi) {
+      totalMidi++
+      if (j.midi.entree) plats.push({ plat: j.midi.entree, service: 'déjeuner', jour, couverts: nbCouverts })
+      if (j.midi.plat)   plats.push({ plat: j.midi.plat,   service: 'déjeuner', jour, couverts: nbCouverts })
+      if (j.midi.dessert) plats.push({ plat: j.midi.dessert, service: 'déjeuner', jour, couverts: nbCouverts })
+    }
+    if (hasSoir) {
+      totalSoir++
+      if (j.soir.entree) plats.push({ plat: j.soir.entree, service: 'dîner', jour, couverts: nbCouverts })
+      if (j.soir.plat)   plats.push({ plat: j.soir.plat,   service: 'dîner', jour, couverts: nbCouverts })
+      if (j.soir.dessert) plats.push({ plat: j.soir.dessert, service: 'dîner', jour, couverts: nbCouverts })
+    }
   }
 
-  const prompt = `Tu es un chef gestionnaire de restaurant. Génère la liste de courses pour la semaine.
+  const totalServices = totalMidi + totalSoir
+  const totalCouverts = totalServices * nbCouverts
+
+  const platsList = plats
+    .map(p => `- ${p.plat} (${p.service} ${p.jour}, ${p.couverts} couverts)`)
+    .join('\n')
+
+  const prompt = `Tu es un chef gestionnaire de restaurant rigoureux. Génère la liste de courses exacte pour la semaine.
 
 Restaurant : ${restaurant}
-Couverts moyens par service : ${couverts || 50}
-Plats de la semaine :
-${plats.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+Couverts par service : ${nbCouverts} personnes
+Services déjeuner : ${totalMidi} | Services dîner : ${totalSoir}
+Total services : ${totalServices} | Total couverts semaine : ${totalCouverts}
 
-Génère une liste de courses consolidée, en regroupant les quantités identiques.
+Liste complète des plats à servir cette semaine :
+${platsList}
+
+RÈGLES DE CALCUL STRICTES :
+1. Pour chaque ingrédient, COMPTE dans combien de plats il apparaît et MULTIPLIE par le nombre de couverts de ces services
+2. Exemple : si le beurre est utilisé dans 3 plats à ${nbCouverts} couverts chacun → quantité = 3 × ${nbCouverts} × portion unitaire
+3. Consolide les ingrédients communs à plusieurs plats en une seule ligne
+4. Arrondis toujours AU-DESSUS (jamais en dessous) pour ne pas manquer
+5. Les portions standard en restauration : viande/poisson 180-220g/pers, légumes d'accompagnement 150g/pers, féculents 80g/pers, crème/sauce 60-80ml/pers
+6. Ajoute 10% de marge sur toutes les quantités (pertes, erreurs de découpe)
+7. Exprime les quantités en unités professionnelles : kg, L, unités, bottes, sachets
+
 Retourne UNIQUEMENT ce JSON :
 {
+  "meta": {
+    "couverts_par_service": ${nbCouverts},
+    "nb_services": ${totalServices},
+    "total_couverts": ${totalCouverts}
+  },
   "categories": [
     {
       "nom": "Viandes & Volailles",
       "emoji": "🥩",
       "items": [
-        { "produit": "Agneau (gigot)", "quantite": "8 kg", "note": "Lundi soir + Mardi soir" }
+        { "produit": "Filet de bœuf", "quantite": "12 kg", "note": "Lundi midi + Jeudi soir, ${nbCouverts} cvts × 2 services + 10%" }
       ]
     },
     { "nom": "Poissons & Fruits de mer", "emoji": "🐟", "items": [] },
     { "nom": "Légumes & Fruits", "emoji": "🥦", "items": [] },
     { "nom": "Produits laitiers & Œufs", "emoji": "🧀", "items": [] },
-    { "nom": "Épicerie & Condiments", "emoji": "🫙", "items": [] },
-    { "nom": "Herbes & Épices", "emoji": "🌿", "items": [] }
+    { "nom": "Épicerie sèche & Condiments", "emoji": "🫙", "items": [] },
+    { "nom": "Herbes fraîches & Épices", "emoji": "🌿", "items": [] },
+    { "nom": "Boissons & Divers", "emoji": "🧴", "items": [] }
   ]
 }
-Les quantités sont adaptées pour ${couverts || 50} couverts par service.
-Exclure les catégories vides. Retourne UNIQUEMENT le JSON.`
+
+Exclure les catégories vides. Le champ "note" doit toujours expliquer le calcul. Retourne UNIQUEMENT le JSON.`
 
   try {
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5',
-      max_tokens: 2000,
+      max_tokens: 2500,
       messages: [{ role: 'user', content: prompt }],
     })
 
