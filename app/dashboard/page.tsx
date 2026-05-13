@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import RecipeModal from '@/app/components/RecipeModal'
 
 type Jour = { midi: Service; soir: Service }
 type Service = { entree: string; plat: string; dessert: string; prix?: string }
@@ -43,6 +44,7 @@ export default function Dashboard() {
   const [historyLoading, setHistoryLoading] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [profileSaved, setProfileSaved] = useState(false)
+  const [recipeTarget, setRecipeTarget] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -324,9 +326,22 @@ export default function Dashboard() {
                 <span className="menu-jour">{jourActif}</span>
                 {svc.prix && <span className="menu-prix">{svc.prix}</span>}
               </div>
-              <div className="cours-row"><div className="cours-num">1</div><div><div className="cours-nom">{svc.entree}</div><div className="cours-cat">Entrée</div></div></div>
-              <div className="cours-row"><div className="cours-num">2</div><div><div className="cours-nom">{svc.plat}</div><div className="cours-cat">Plat principal</div></div></div>
-              <div className="cours-row"><div className="cours-num">3</div><div><div className="cours-nom">{svc.dessert}</div><div className="cours-cat">Dessert</div></div></div>
+              {[
+                { nom: svc.entree, cat: 'Entrée' },
+                { nom: svc.plat, cat: 'Plat principal' },
+                { nom: svc.dessert, cat: 'Dessert' },
+              ].map((cours, i) => (
+                <div key={i} className="cours-row">
+                  <div className="cours-num">{i + 1}</div>
+                  <div style={{ flex: 1 }}>
+                    <div className="cours-nom">{cours.nom}</div>
+                    <div className="cours-cat">{cours.cat}</div>
+                  </div>
+                  <button className="recette-btn" onClick={() => setRecipeTarget(cours.nom)}>
+                    Recette →
+                  </button>
+                </div>
+              ))}
             </div>
           )}
 
@@ -370,6 +385,16 @@ export default function Dashboard() {
             <button className="btn-new" onClick={nouveau}>Nouveau menu →</button>
           </div>
         </div>
+      )}
+
+      {recipeTarget && (
+        <RecipeModal
+          plat={recipeTarget}
+          cuisine={form.cuisine}
+          couverts={form.couverts}
+          stocks={form.stocks}
+          onClose={() => setRecipeTarget(null)}
+        />
       )}
 
       {/* ── ONGLET HISTORIQUE ── */}
