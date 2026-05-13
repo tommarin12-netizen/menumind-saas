@@ -762,3 +762,45 @@ select.inp{cursor:pointer;}
   .carte-svc{border-right:none;border-bottom:1px solid var(--border);}
   .carte-svc:last-child{border-bottom:none;}
 }
+
+/* ── SETUP MODAL (première connexion) ──────────────────────────────── */
+.setup-overlay{position:fixed;inset:0;z-index:2000;background:rgba(28,17,9,.60);backdrop-filter:blur(28px) saturate(1.5);-webkit-backdrop-filter:blur(28px) saturate(1.5);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .25s ease both;}
+.setup-card{background:var(--glass-heavy);backdrop-filter:var(--blur-lg);-webkit-backdrop-filter:var(--blur-lg);border:1px solid var(--glass-border);border-radius:var(--r24);padding:48px 40px;width:100%;max-width:440px;box-shadow:var(--glass-sh-lg);animation:modalIn .4s var(--ease-spring) both;text-align:center;}
+.setup-logo{font-family:'Fraunces',serif;font-size:22px;font-weight:400;margin-bottom:24px;color:var(--ink);letter-spacing:-.4px;}
+.setup-logo em{font-style:italic;color:var(--accent);}
+.setup-emoji{font-size:60px;margin-bottom:16px;display:block;animation:emojiPop .5s var(--ease-spring) .15s both;}
+.setup-title{font-family:'Fraunces',serif;font-size:28px;font-weight:400;letter-spacing:-.8px;color:var(--ink);margin-bottom:10px;}
+.setup-sub{font-size:14px;color:var(--ink3);line-height:1.65;margin-bottom:28px;}
+.setup-input{width:100%;font-family:'Inter',sans-serif;font-size:16px;font-weight:500;color:var(--ink);background:rgba(255,255,255,.78);border:1.5px solid rgba(255,255,255,.88);padding:14px 18px;outline:none;border-radius:var(--r16);transition:all .22s;text-align:center;margin-bottom:12px;box-shadow:inset 0 1px 4px rgba(28,17,9,.05);}
+.setup-input:focus{border-color:var(--accent);background:rgba(255,255,255,.96);box-shadow:0 0 0 4px rgba(199,92,50,.10),inset 0 1px 3px rgba(28,17,9,.02);}
+.setup-input::placeholder{color:var(--ink3);font-weight:400;}
+.setup-select{width:100%;font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);background:rgba(255,255,255,.78);border:1.5px solid rgba(255,255,255,.88);padding:13px 18px;outline:none;border-radius:var(--r12);transition:all .22s;margin-bottom:28px;cursor:pointer;appearance:none;-webkit-appearance:none;}
+.setup-select:focus{border-color:var(--accent);}
+.setup-btn{width:100%;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;padding:16px;background:linear-gradient(135deg,var(--accent),#d46a3a);color:#fff;border:none;cursor:pointer;border-radius:var(--r16);transition:all .22s;box-shadow:0 6px 24px rgba(199,92,50,.32),inset 0 1px 0 rgba(255,255,255,.18);}
+.setup-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 32px rgba(199,92,50,.4),inset 0 1px 0 rgba(255,255,255,.18);}
+.setup-btn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+
+/* ── WELCOME TOAST ─────────────────────────────────────────────────── */
+@keyframes toastIn{from{opacity:0;transform:translateX(24px) scale(.95)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateX(24px) scale(.95)}}
+.welcome-toast{position:fixed;top:76px;right:20px;z-index:500;background:var(--glass-heavy);backdrop-filter:var(--blur-lg);-webkit-backdrop-filter:var(--blur-lg);border:1px solid var(--glass-border);border-radius:var(--r16);padding:16px 18px;max-width:320px;width:calc(100vw - 40px);box-shadow:var(--glass-sh-lg);animation:toastIn .4s var(--ease-spring) both;display:flex;align-items:flex-start;gap:12px;}
+.welcome-toast.hiding{animation:toastOut .3s var(--ease-out) forwards;}
+.welcome-toast-emoji{font-size:26px;flex-shrink:0;line-height:1.1;}
+.welcome-toast-content{flex:1;min-width:0;}
+.welcome-toast-name{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;}
+.welcome-toast-msg{font-size:13px;color:var(--ink);line-height:1.5;font-weight:400;}
+.welcome-toast-close{background:none;border:none;color:var(--ink3);cursor:pointer;font-size:14px;padding:0;line-height:1;flex-shrink:0;margin-left:4px;margin-top:2px;transition:color .15s;}
+.welcome-toast-close:hover{color:var(--ink);}
+
+/* ── NAV RESTO NAME ──────────────────────────────────────────────── */
+.dash-nav-resto{font-size:13px;font-weight:600;color:var(--ink2);background:var(--accent-soft);border:1px solid rgba(199,92,50,.15);padding:4px 12px;border-radius:100px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ── COUT VAL alias ──────────────────────────────────────────────── */
+.cout-val{font-size:15px;font-weight:700;color:var(--ink);}
+.cout-item.hot .cout-val{color:var(--green);}
+
+@media(max-width:640px){
+  .welcome-toast{top:72px;right:12px;max-width:calc(100vw - 24px);}
+  .setup-card{padding:36px 24px;}
+  .dash-nav-resto{display:none;}
+}

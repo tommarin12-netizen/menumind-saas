@@ -7,82 +7,174 @@ import ShoppingListModal from '@/app/components/ShoppingListModal'
 import Icon3D from '@/app/components/Icon3D'
 import { getProduitsSaison, getMoisLabel } from '@/lib/saison'
 
+// ─── Types ───────────────────────────────────────────────────────────────────
+type Profile = {
+  restaurant_name: string
+  cuisine: string
+  couverts: string
+  budget: string
+  allergenes: string
+  welcome_count: number
+}
 type Jour = { midi: Service; soir: Service }
 type Service = { entree: string; plat: string; dessert: string; cout_matiere?: string; prix_vente?: string; prix?: string }
 type Proposition = { produit: string; emoji: string; nb_plats: number; plats: string[] }
 type Couts = { cout_moyen_entree: string; cout_moyen_plat: string; cout_moyen_dessert: string; marge_brute_estimee: string; conseil_rentabilite: string }
 type MenuData = {
-  analyse: string
-  conseil?: string
-  economie?: string
-  alertes?: string[]
-  propositions?: Proposition[]
-  couts?: Couts
+  analyse: string; conseil?: string; economie?: string
+  alertes?: string[]; propositions?: Proposition[]; couts?: Couts
   jours: { [k: string]: Jour }
 }
 type HistoryItem = {
-  id: string
-  restaurant: string
-  cuisine: string
-  created_at: string
-  menu: MenuData
-  params: Record<string, string>
+  id: string; restaurant: string; cuisine: string
+  created_at: string; menu: MenuData; params: Record<string, string>
 }
 
+// ─── Constantes ──────────────────────────────────────────────────────────────
 const JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi']
-const PROFILE_KEY = 'mm_restaurant_profile'
 
+const WELCOMES = [
+  (n: string) => `Bonjour ${n} ! Qu'est-ce qu'on cuisine de bon cette semaine ? 🍳`,
+  (n: string) => `Content de vous revoir, ${n} ! Vos clients vont se régaler ✨`,
+  (n: string) => `Bonne journée ${n} ! MenuMind est là pour vous inspirer 👨‍🍳`,
+  (n: string) => `Ravi de vous retrouver, ${n} ! À vos fourneaux 🔥`,
+]
+
+const CUISINES = ['Française','Italienne','Méditerranéenne','Asiatique','Végétarienne','Burger / Street food','Brasserie','Gastronomique']
+
+// ─── Composant principal ─────────────────────────────────────────────────────
 export default function Dashboard() {
+  const router = useRouter()
+  const supabase = createClient()
+  const saisonProduits = getProduitsSaison()
+  const moisLabel = getMoisLabel()
+
+  // Profil resto
+  const [profile, setProfile]         = useState<Profile | null>(null)
+  const [showSetup, setShowSetup]     = useState(false)
+  const [setupName, setSetupName]     = useState('')
+  const [setupCuisine, setSetupCuisine] = useState('Française')
+  const [savingSetup, setSavingSetup] = useState(false)
+  const [welcomeMsg, setWelcomeMsg]   = useState<string | null>(null)
+  const [welcomeHiding, setWelcomeHiding] = useState(false)
+
+  // Formulaire génération
   const [form, setForm] = useState({
     restaurant: '', cuisine: 'Française', stocks: '',
     meteo: '', couverts: '', budget: '', allergenes: '',
     nb_midi: '5', nb_soir: '5',
   })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [menu, setMenu] = useState<MenuData | null>(null)
-  const [jourActif, setJourActif] = useState('Lundi')
-  const [svcActif, setSvcActif] = useState<'midi' | 'soir'>('midi')
-  const [userEmail, setUserEmail] = useState('')
-  const [firstVisit, setFirstVisit] = useState(false)
-  const [activeTab, setActiveTab] = useState<'generer' | 'historique'>('generer')
-  const [history, setHistory] = useState<HistoryItem[]>([])
+  const [loading, setLoading]         = useState(false)
+  const [error, setError]             = useState('')
+  const [menu, setMenu]               = useState<MenuData | null>(null)
+  const [jourActif, setJourActif]     = useState('Lundi')
+  const [svcActif, setSvcActif]       = useState<'midi' | 'soir'>('midi')
+
+  // UI
+  const [activeTab, setActiveTab]     = useState<'generer' | 'historique'>('generer')
+  const [history, setHistory]         = useState<HistoryItem[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [expandedId, setExpandedId]   = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
-  const [profileSaved, setProfileSaved] = useState(false)
   const [recipeTarget, setRecipeTarget] = useState<string | null>(null)
   const [showShopping, setShowShopping] = useState(false)
-  const [shareUrl, setShareUrl] = useState<string | null>(null)
+  const [shareUrl, setShareUrl]       = useState<string | null>(null)
   const [shareCopied, setShareCopied] = useState(false)
   const [showPrintMenu, setShowPrintMenu] = useState(false)
-  const saisonProduits = getProduitsSaison()
-  const moisLabel = getMoisLabel()
-  const router = useRouter()
-  const supabase = createClient()
 
+  // ── Init : charge le profil depuis Supabase ───────────────────────────────
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        setUserEmail(data.user.email ?? '')
-        const key = `mm_welcomed_${data.user.id}`
-        if (!localStorage.getItem(key)) {
-          localStorage.setItem(key, '1')
-          setFirstVisit(true)
-        }
-      }
-    })
-    // Charger le profil sauvegardé
-    const saved = localStorage.getItem(PROFILE_KEY)
-    if (saved) {
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
       try {
-        const profile = JSON.parse(saved)
-        setForm(f => ({ ...f, ...profile }))
-        setProfileSaved(true)
-      } catch {}
+        const res = await fetch('/api/profile')
+        const p: Profile | null = res.ok ? await res.json() : null
+
+        if (p && p.restaurant_name) {
+          setProfile(p)
+          setForm(f => ({
+            ...f,
+            restaurant: p.restaurant_name,
+            cuisine:    p.cuisine    || 'Française',
+            couverts:   p.couverts   || '',
+            budget:     p.budget     || '',
+            allergenes: p.allergenes || '',
+          }))
+          // Message de bienvenue personnalisé
+          const idx = (p.welcome_count ?? 0) % 4
+          setWelcomeMsg(WELCOMES[idx](p.restaurant_name))
+          // Incrémente le compteur silencieusement
+          fetch('/api/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...p, welcome_count: (p.welcome_count ?? 0) + 1 }),
+          })
+        } else {
+          // Première connexion → modale de setup
+          setShowSetup(true)
+        }
+      } catch {
+        setShowSetup(true)
+      }
     }
+    init()
   }, [])
 
+  // Auto-ferme le toast après 5 s
+  useEffect(() => {
+    if (!welcomeMsg) return
+    const t = setTimeout(() => {
+      setWelcomeHiding(true)
+      setTimeout(() => { setWelcomeMsg(null); setWelcomeHiding(false) }, 300)
+    }, 5000)
+    return () => clearTimeout(t)
+  }, [welcomeMsg])
+
+  // ── Enregistre le profil (setup initial) ─────────────────────────────────
+  async function saveSetup() {
+    if (!setupName.trim()) return
+    setSavingSetup(true)
+    const profileData = {
+      restaurant_name: setupName.trim(),
+      cuisine: setupCuisine,
+      couverts: '', budget: '', allergenes: '',
+      welcome_count: 1,
+    }
+    const res = await fetch('/api/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profileData),
+    })
+    if (res.ok) {
+      const saved = await res.json()
+      setProfile(saved)
+      setForm(f => ({ ...f, restaurant: setupName.trim(), cuisine: setupCuisine }))
+      setShowSetup(false)
+      setWelcomeMsg(WELCOMES[0](setupName.trim()))
+    }
+    setSavingSetup(false)
+  }
+
+  // ── Sauvegarde profil depuis le formulaire ────────────────────────────────
+  async function saveProfileFromForm(f: typeof form) {
+    if (!f.restaurant) return
+    await fetch('/api/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        restaurant_name: f.restaurant,
+        cuisine:    f.cuisine,
+        couverts:   f.couverts,
+        budget:     f.budget,
+        allergenes: f.allergenes,
+        welcome_count: profile?.welcome_count ?? 0,
+      }),
+    })
+  }
+
+  // ── Historique ────────────────────────────────────────────────────────────
   async function loadHistory() {
     setHistoryLoading(true)
     const res = await fetch('/api/history')
@@ -105,37 +197,12 @@ export default function Dashboard() {
     if (expandedId === id) setExpandedId(null)
   }
 
-  async function logout() {
-    await supabase.auth.signOut()
-    router.push('/')
-  }
-
-  function set(k: string, v: string) {
-    setForm(f => ({ ...f, [k]: v }))
-  }
-
-  function saveProfile() {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify({
-      restaurant: form.restaurant,
-      cuisine: form.cuisine,
-      couverts: form.couverts,
-      budget: form.budget,
-      allergenes: form.allergenes,
-    }))
-    setProfileSaved(true)
-  }
-
-  function clearProfile() {
-    localStorage.removeItem(PROFILE_KEY)
-    setProfileSaved(false)
-  }
-
+  // ── Génération menu ───────────────────────────────────────────────────────
   async function generer() {
     if (!form.restaurant) { setError('Veuillez indiquer le nom de votre restaurant.'); return }
     setError('')
     setLoading(true)
     setMenu(null)
-
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -150,10 +217,9 @@ export default function Dashboard() {
       setMenu(data)
       setJourActif('Lundi')
       setSvcActif('midi')
-
-      // Sauvegarder dans l'historique + profil auto
-      saveProfile()
       setShareUrl(null)
+      // Sauvegarde profil + historique
+      await saveProfileFromForm(form)
       const histRes = await fetch('/api/history', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -161,9 +227,7 @@ export default function Dashboard() {
       })
       if (histRes.ok) {
         const histData = await histRes.json()
-        if (histData.id) {
-          setShareUrl(`${window.location.origin}/menu/${histData.id}`)
-        }
+        if (histData.id) setShareUrl(`${window.location.origin}/menu/${histData.id}`)
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Une erreur est survenue.')
@@ -172,62 +236,126 @@ export default function Dashboard() {
     }
   }
 
+  function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })) }
   function nouveau() { setMenu(null); setError('') }
-  function printMenu() { window.print() }
-
+  async function logout() { await supabase.auth.signOut(); router.push('/') }
   const svc = menu && jourActif ? menu.jours[jourActif]?.[svcActif] : null
 
+  // ─────────────────────────────────────────────────────────────────────────
   return (
     <>
       <div className="bg-scene">
         <div className="bg-orb orb1" /><div className="bg-orb orb2" /><div className="bg-orb orb3" />
       </div>
 
+      {/* ══ SETUP MODAL (première connexion) ══════════════════════════════ */}
+      {showSetup && (
+        <div className="setup-overlay">
+          <div className="setup-card">
+            <div className="setup-logo">Menu<em>Mind</em></div>
+            <span className="setup-emoji">👨‍🍳</span>
+            <h2 className="setup-title">Bienvenue !</h2>
+            <p className="setup-sub">
+              Pour personnaliser votre expérience,<br />
+              quel est le nom de votre restaurant ?
+            </p>
+            <input
+              className="setup-input"
+              placeholder="Le Petit Bistrot…"
+              value={setupName}
+              onChange={e => setSetupName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && saveSetup()}
+              autoFocus
+            />
+            <select
+              className="setup-select"
+              value={setupCuisine}
+              onChange={e => setSetupCuisine(e.target.value)}
+            >
+              {CUISINES.map(c => <option key={c}>{c}</option>)}
+            </select>
+            <button
+              className="setup-btn"
+              onClick={saveSetup}
+              disabled={!setupName.trim() || savingSetup}
+            >
+              {savingSetup
+                ? <><span className="dots"><span /><span /><span /></span> Enregistrement…</>
+                : 'Commencer →'
+              }
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ══ WELCOME TOAST ════════════════════════════════════════════════ */}
+      {welcomeMsg && (
+        <div className={`welcome-toast${welcomeHiding ? ' hiding' : ''}`}>
+          <span className="welcome-toast-emoji">👋</span>
+          <div className="welcome-toast-content">
+            {profile?.restaurant_name && (
+              <div className="welcome-toast-name">{profile.restaurant_name}</div>
+            )}
+            <div className="welcome-toast-msg">{welcomeMsg}</div>
+          </div>
+          <button
+            className="welcome-toast-close"
+            onClick={() => {
+              setWelcomeHiding(true)
+              setTimeout(() => { setWelcomeMsg(null); setWelcomeHiding(false) }, 300)
+            }}
+          >✕</button>
+        </div>
+      )}
+
+      {/* ══ NAV ═══════════════════════════════════════════════════════════ */}
       <nav className="dash-nav">
-        <span className="logo">Menu<em>Mind</em></span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span className="logo">Menu<em>Mind</em></span>
+          {profile?.restaurant_name && (
+            <span className="dash-nav-resto">{profile.restaurant_name}</span>
+          )}
+        </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {userEmail && <span style={{ fontSize: 12, color: 'var(--ink3)' }}>{userEmail}</span>}
+          <button
+            className="btn-ghost"
+            style={{ fontSize: 12 }}
+            onClick={() => setShowSetup(true)}
+            title="Modifier mon profil"
+          >
+            ⚙️ Mon resto
+          </button>
           <button className="btn-ghost" onClick={logout}>Déconnexion</button>
         </div>
       </nav>
 
-      {/* Tabs */}
+      {/* ══ TABS ══════════════════════════════════════════════════════════ */}
       <div className="dash-tabs">
         <div className="dash-tabs-inner">
-          <button className={`dash-tab${activeTab === 'generer' ? ' on' : ''}`} onClick={() => setActiveTab('generer')}>
+          <button
+            className={`dash-tab${activeTab === 'generer' ? ' on' : ''}`}
+            onClick={() => setActiveTab('generer')}
+          >
             <Icon3D anim="pulse" size="1em">✨</Icon3D> Générer un menu
           </button>
-          <button className={`dash-tab${activeTab === 'historique' ? ' on' : ''}`} onClick={() => setActiveTab('historique')}>
+          <button
+            className={`dash-tab${activeTab === 'historique' ? ' on' : ''}`}
+            onClick={() => setActiveTab('historique')}
+          >
             <Icon3D anim="float" size="1em">📋</Icon3D> Historique
           </button>
         </div>
       </div>
 
-      {firstVisit && activeTab === 'generer' && (
-        <div className="welcome-banner">
-          <button className="welcome-close" onClick={() => setFirstVisit(false)}>✕</button>
-          <div className="welcome-inner">
-            <span style={{ fontSize: 32 }}>👋</span>
-            <div>
-              <div className="welcome-title">Bienvenue sur MenuMind !</div>
-              <div className="welcome-sub">Remplissez le formulaire ci-dessous et générez votre premier menu de la semaine en 30 secondes.</div>
-            </div>
-          </div>
-          <div className="welcome-steps">
-            <div className="ws"><span>1</span>Renseignez votre restaurant</div>
-            <div className="ws"><span>2</span>Indiquez vos stocks à écouler</div>
-            <div className="ws"><span>3</span>Cliquez sur Générer 🚀</div>
-          </div>
-        </div>
-      )}
-
-      {/* ── ONGLET GÉNÉRER ── */}
+      {/* ══ ONGLET GÉNÉRER — FORMULAIRE ═══════════════════════════════════ */}
       {activeTab === 'generer' && !menu && (
         <div className="dash-content">
-          {/* Widget produits de saison */}
+          {/* Produits de saison */}
           {saisonProduits.length > 0 && (
             <div className="saison-widget">
-              <div className="saison-title"><Icon3D anim="wiggle" size="1.1em">🌱</Icon3D> En saison en {moisLabel}</div>
+              <div className="saison-title">
+                <Icon3D anim="wiggle" size="1.1em">🌱</Icon3D> En saison en {moisLabel}
+              </div>
               <div className="saison-items">
                 {saisonProduits.map((p, i) => (
                   <div key={i} className="saison-item" onClick={() => {
@@ -238,56 +366,75 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 6 }}>Cliquez sur un produit pour l&apos;ajouter à vos stocks</div>
+              <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 6 }}>
+                Cliquez sur un produit pour l&apos;ajouter à vos stocks
+              </div>
             </div>
           )}
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
             <h1 className="dash-title">Générer mon <em>menu</em></h1>
-            {profileSaved && (
-              <span className="profile-badge" onClick={clearProfile} title="Cliquer pour effacer">
-                ✓ Profil sauvegardé · Effacer
-              </span>
-            )}
           </div>
-          <p className="dash-sub">Remplissez les informations de votre restaurant pour obtenir votre planning de la semaine.</p>
+          <p className="dash-sub">
+            Remplissez les informations ci-dessous pour obtenir votre planning de la semaine.
+          </p>
 
           <div className="form-wrap">
             <div className="form-grid">
+              {/* Nom du restaurant — pré-rempli depuis le profil */}
               <div className="f-group full">
-                <label className="f-label">Nom du restaurant *</label>
-                <input className="inp" value={form.restaurant} onChange={e => set('restaurant', e.target.value)} placeholder="Le Petit Bistrot" />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <label className="f-label" style={{ margin: 0 }}>Nom du restaurant *</label>
+                  {profile?.restaurant_name && (
+                    <span
+                      style={{ fontSize: 11, color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}
+                      onClick={() => setShowSetup(true)}
+                    >
+                      Modifier mon profil
+                    </span>
+                  )}
+                </div>
+                <input
+                  className="inp"
+                  value={form.restaurant}
+                  onChange={e => set('restaurant', e.target.value)}
+                  placeholder="Le Petit Bistrot"
+                />
               </div>
+
               <div className="f-group">
                 <label className="f-label">Type de cuisine</label>
                 <select className="inp" value={form.cuisine} onChange={e => set('cuisine', e.target.value)}>
-                  <option>Française</option><option>Italienne</option><option>Méditerranéenne</option>
-                  <option>Asiatique</option><option>Végétarienne</option><option>Burger / Street food</option>
-                  <option>Brasserie</option><option>Gastronomique</option>
+                  {CUISINES.map(c => <option key={c}>{c}</option>)}
                 </select>
               </div>
+
               <div className="f-group">
                 <label className="f-label">Météo de la semaine</label>
                 <input className="inp" value={form.meteo} onChange={e => set('meteo', e.target.value)} placeholder="Froid 8°C, pluie…" />
               </div>
+
               <div className="f-group full">
                 <label className="f-label">Stocks / produits à écouler</label>
                 <input className="inp" value={form.stocks} onChange={e => set('stocks', e.target.value)} placeholder="Agneau, courgettes, fromage de chèvre…" />
               </div>
+
               <div className="f-group">
                 <label className="f-label">Couverts / jour</label>
                 <input className="inp" value={form.couverts} onChange={e => set('couverts', e.target.value)} placeholder="~80/j, jeudi 120…" />
               </div>
+
               <div className="f-group">
                 <label className="f-label">Budget matière</label>
                 <input className="inp" value={form.budget} onChange={e => set('budget', e.target.value)} placeholder="28% CA, max 8€…" />
               </div>
+
               <div className="f-group full">
                 <label className="f-label">Allergènes à exclure</label>
                 <input className="inp" value={form.allergenes} onChange={e => set('allergenes', e.target.value)} placeholder="Gluten, noix, lactose…" />
               </div>
 
-              {/* Sélection services */}
+              {/* Nombre de services */}
               <div className="f-group full">
                 <label className="f-label">Nombre de services à générer</label>
                 <div className="services-row">
@@ -316,16 +463,21 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+
             {error && <div className="erreur" style={{ marginTop: 16 }}>{error}</div>}
+
             <button className="btn-gen" onClick={generer} disabled={loading}>
-              {loading ? <><span className="dots"><span /><span /><span /></span> Génération en cours…</> : 'Générer mon menu de la semaine →'}
+              {loading
+                ? <><span className="dots"><span /><span /><span /></span> Génération en cours…</>
+                : 'Générer mon menu de la semaine →'
+              }
             </button>
-            <p className="form-note">5 jours · Déjeuner & Dîner · Conseil du chef inclus</p>
+            <p className="form-note">5 jours · Déjeuner & Dîner · Analyse chef incluse</p>
           </div>
         </div>
       )}
 
-      {/* ── RÉSULTATS ── */}
+      {/* ══ RÉSULTATS ════════════════════════════════════════════════════ */}
       {activeTab === 'generer' && menu && (
         <div className="res-page">
           <div className="res-top">
@@ -334,14 +486,22 @@ export default function Dashboard() {
               <div className="res-sub">{form.restaurant} · Cuisine {form.cuisine}</div>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button className="btn-ghost print-hide" style={{ fontSize: 12 }} onClick={() => setShowShopping(true)}><Icon3D anim="bounce" size="1.1em">🛒</Icon3D> Courses</button>
-              <button className="btn-ghost print-hide" style={{ fontSize: 12 }} onClick={() => setShowPrintMenu(true)}><Icon3D anim="float" size="1.1em">📄</Icon3D> Menu carte</button>
+              <button className="btn-ghost print-hide" style={{ fontSize: 12 }} onClick={() => setShowShopping(true)}>
+                <Icon3D anim="bounce" size="1.1em">🛒</Icon3D> Courses
+              </button>
+              <button className="btn-ghost print-hide" style={{ fontSize: 12 }} onClick={() => setShowPrintMenu(true)}>
+                <Icon3D anim="float" size="1.1em">📄</Icon3D> Menu carte
+              </button>
               {shareUrl && (
-                <button className="btn-ghost print-hide" style={{ fontSize: 12, color: shareCopied ? 'var(--green)' : undefined }} onClick={() => {
-                  navigator.clipboard.writeText(shareUrl)
-                  setShareCopied(true)
-                  setTimeout(() => setShareCopied(false), 2000)
-                }}>
+                <button
+                  className="btn-ghost print-hide"
+                  style={{ fontSize: 12, color: shareCopied ? 'var(--green)' : undefined }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(shareUrl)
+                    setShareCopied(true)
+                    setTimeout(() => setShareCopied(false), 2000)
+                  }}
+                >
                   {shareCopied ? '✓ Copié !' : '🔗 Partager'}
                 </button>
               )}
@@ -383,7 +543,7 @@ export default function Dashboard() {
             <div className="prop-section">
               <div className="prop-header">
                 <span className="prop-title"><Icon3D anim="spin" size="1.1em">🧊</Icon3D> Produits périssables écoulés cette semaine</span>
-                <span className="prop-badge">{menu.propositions.length} produit{menu.propositions.length > 1 ? 's' : ''} utilisé{menu.propositions.length > 1 ? 's' : ''}</span>
+                <span className="prop-badge">{menu.propositions.length} produit{menu.propositions.length > 1 ? 's' : ''}</span>
               </div>
               <div className="prop-grid">
                 {menu.propositions.map((p, i) => (
@@ -408,7 +568,9 @@ export default function Dashboard() {
             <div style={{ marginBottom: 16 }}>
               <div className="res-sec-label">Points d&apos;attention</div>
               {menu.alertes.map((a, i) => (
-                <div key={i} style={{ fontSize: 13, color: 'var(--amber)', background: 'var(--amber-soft)', border: '1px solid rgba(154,106,16,.15)', borderRadius: 'var(--r8)', padding: '8px 12px', marginBottom: 6 }}><Icon3D anim="wiggle" size="1em">⚠️</Icon3D> {a}</div>
+                <div key={i} style={{ fontSize: 13, color: 'var(--amber)', background: 'var(--amber-soft)', border: '1px solid rgba(154,106,16,.15)', borderRadius: 'var(--r8)', padding: '8px 12px', marginBottom: 6 }}>
+                  <Icon3D anim="wiggle" size="1em">⚠️</Icon3D> {a}
+                </div>
               ))}
             </div>
           )}
@@ -417,18 +579,23 @@ export default function Dashboard() {
           <div className="res-sec-label">Menu de la semaine</div>
 
           <div className="tabs-jours print-hide">
-            {JOURS.map(j => <button key={j} className={`tj${jourActif === j ? ' on' : ''}`} onClick={() => setJourActif(j)}>{j}</button>)}
+            {JOURS.map(j => (
+              <button key={j} className={`tj${jourActif === j ? ' on' : ''}`} onClick={() => setJourActif(j)}>{j}</button>
+            ))}
           </div>
           <div className="tabs-svc print-hide">
             <button className={`ts${svcActif === 'midi' ? ' on' : ''}`} onClick={() => setSvcActif('midi')}>Déjeuner</button>
             <button className={`ts${svcActif === 'soir' ? ' on' : ''}`} onClick={() => setSvcActif('soir')}>Dîner</button>
           </div>
 
-          {/* Vue écran : 1 jour à la fois */}
           {svc && (
             <div className="menu-card print-hide">
               <div className="menu-head">
-                <span className="menu-jour">{jourActif} · {svcActif === 'midi' ? <><Icon3D anim="pulse" size="1em">☀️</Icon3D> Déjeuner</> : <><Icon3D anim="float" size="1em">🌙</Icon3D> Dîner</>}</span>
+                <span className="menu-jour">
+                  {jourActif} · {svcActif === 'midi'
+                    ? <><Icon3D anim="pulse" size="1em">☀️</Icon3D> Déjeuner</>
+                    : <><Icon3D anim="float" size="1em">🌙</Icon3D> Dîner</>}
+                </span>
                 <div className="menu-prix-row">
                   {(svc.cout_matiere || svc.prix) && (
                     <span className="menu-cout">
@@ -446,8 +613,8 @@ export default function Dashboard() {
               </div>
               {[
                 { nom: svc.entree, cat: 'Entrée' },
-                { nom: svc.plat, cat: 'Plat principal' },
-                { nom: svc.dessert, cat: 'Dessert' },
+                { nom: svc.plat,   cat: 'Plat principal' },
+                { nom: svc.dessert,cat: 'Dessert' },
               ].map((cours, i) => (
                 <div key={i} className="cours-row">
                   <div className="cours-num">{i + 1}</div>
@@ -463,7 +630,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Vue impression : tous les jours */}
+          {/* Vue impression */}
           <div className="print-only">
             <h2 style={{ fontFamily: 'serif', marginBottom: 16 }}>Menu de la semaine — {form.restaurant}</h2>
             {JOURS.map(jour => {
@@ -505,65 +672,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {recipeTarget && (
-        <RecipeModal plat={recipeTarget} cuisine={form.cuisine} couverts={form.couverts} stocks={form.stocks} onClose={() => setRecipeTarget(null)} />
-      )}
-
-      {showShopping && menu && (
-        <ShoppingListModal menu={menu} couverts={form.couverts} restaurant={form.restaurant} onClose={() => setShowShopping(false)} />
-      )}
-
-      {/* PDF Menu carte overlay */}
-      {showPrintMenu && menu && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowPrintMenu(false)}>
-          <div className="menu-carte-box">
-            <div className="menu-carte-head">
-              <div>
-                <div className="menu-carte-resto">{form.restaurant}</div>
-                <div className="menu-carte-sub">Cuisine {form.cuisine} · Menu de la semaine</div>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn-gen" style={{ marginTop: 0, padding: '10px 20px', fontSize: 13 }} onClick={() => window.print()}><Icon3D anim="float" size="1em">📄</Icon3D> Télécharger PDF</button>
-                <button className="modal-close" style={{ position: 'static' }} onClick={() => setShowPrintMenu(false)}>✕</button>
-              </div>
-            </div>
-            <div className="menu-carte-body">
-              {['Lundi','Mardi','Mercredi','Jeudi','Vendredi'].map(jour => {
-                const j = menu.jours?.[jour]
-                if (!j?.midi?.plat && !j?.soir?.plat) return null
-                return (
-                  <div key={jour} className="carte-jour">
-                    <div className="carte-jour-nom">{jour}</div>
-                    <div className="carte-services">
-                      {j?.midi?.plat && (
-                        <div className="carte-svc">
-                          <div className="carte-svc-label">☀️ Déjeuner {j.midi.prix && <span>· {j.midi.prix}</span>}</div>
-                          <div className="carte-plat"><em>Entrée</em> {j.midi.entree}</div>
-                          <div className="carte-plat"><em>Plat</em> {j.midi.plat}</div>
-                          <div className="carte-plat"><em>Dessert</em> {j.midi.dessert}</div>
-                        </div>
-                      )}
-                      {j?.soir?.plat && (
-                        <div className="carte-svc">
-                          <div className="carte-svc-label">🌙 Dîner {j.soir.prix && <span>· {j.soir.prix}</span>}</div>
-                          <div className="carte-plat"><em>Entrée</em> {j.soir.entree}</div>
-                          <div className="carte-plat"><em>Plat</em> {j.soir.plat}</div>
-                          <div className="carte-plat"><em>Dessert</em> {j.soir.dessert}</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-            {menu.conseil && (
-              <div className="carte-conseil">💡 {menu.conseil}</div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── ONGLET HISTORIQUE ── */}
+      {/* ══ ONGLET HISTORIQUE ════════════════════════════════════════════ */}
       {activeTab === 'historique' && (
         <div className="dash-content">
           <h1 className="dash-title">Mon <em>historique</em></h1>
@@ -580,7 +689,11 @@ export default function Dashboard() {
               <Icon3D anim="bounce" size={40}>📋</Icon3D>
               <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 6 }}>Aucun menu sauvegardé</div>
               <div style={{ fontSize: 13, color: 'var(--ink3)' }}>Vos menus apparaîtront ici après chaque génération.</div>
-              <button className="btn-accent" style={{ marginTop: 20, fontSize: 13, padding: '10px 24px', borderRadius: 'var(--r8)', border: 'none', cursor: 'pointer' }} onClick={() => setActiveTab('generer')}>
+              <button
+                className="btn-accent"
+                style={{ marginTop: 20, fontSize: 13, padding: '10px 24px', borderRadius: 'var(--r8)', border: 'none', cursor: 'pointer' }}
+                onClick={() => setActiveTab('generer')}
+              >
                 Générer mon premier menu →
               </button>
             </div>
@@ -589,22 +702,12 @@ export default function Dashboard() {
           {!historyLoading && history.length > 0 && (
             <div className="hist-list">
               {history.map(item => {
-                const date = new Date(item.created_at)
-                // Format court : "mer. 13 mai · 14:52"
+                const date    = new Date(item.created_at)
                 const dateStr = date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
                 const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-                const isOpen = expandedId === item.id
-
-                // Plats aperçu (3 premiers midis)
-                const apercu = JOURS
-                  .map(j => item.menu?.jours?.[j]?.midi?.plat)
-                  .filter(Boolean)
-                  .slice(0, 3)
-
-                // Économie : garder seulement le montant avant la parenthèse "~280€ (détail...)"
-                const economieCourt = item.menu?.economie
-                  ? item.menu.economie.replace(/\s*\(.*\)/, '').trim()
-                  : null
+                const isOpen  = expandedId === item.id
+                const apercu  = JOURS.map(j => item.menu?.jours?.[j]?.midi?.plat).filter(Boolean).slice(0, 3)
+                const economieCourt = item.menu?.economie?.replace(/\s*\(.*\)/, '').trim() ?? null
 
                 function ouvrirMenu() {
                   setMenu(item.menu)
@@ -619,25 +722,16 @@ export default function Dashboard() {
 
                 return (
                   <div key={item.id} className={`hist-card${isOpen ? ' open' : ''}`}>
-
-                    {/* ── En-tête ── */}
                     <div className="hist-card-head" onClick={() => setExpandedId(isOpen ? null : item.id)}>
-
-                      {/* Colonne info (gauche) */}
                       <div className="hist-info">
                         <div className="hist-row-top">
                           <span className="hist-resto">{item.restaurant}</span>
-                          {economieCourt && (
-                            <span className="hist-eco">{economieCourt} épargnés</span>
-                          )}
+                          {economieCourt && <span className="hist-eco">{economieCourt} épargnés</span>}
                         </div>
                         <div className="hist-meta">{item.cuisine} · {dateStr} · {timeStr}</div>
-                        {apercu.length > 0 && (
-                          <div className="hist-apercu">{apercu.join(' · ')}</div>
-                        )}
+                        {apercu.length > 0 && <div className="hist-apercu">{apercu.join(' · ')}</div>}
                       </div>
 
-                      {/* Colonne actions (droite) */}
                       <div className="hist-actions" onClick={e => e.stopPropagation()}>
                         {confirmDeleteId === item.id ? (
                           <div className="hist-confirm-delete">
@@ -647,15 +741,8 @@ export default function Dashboard() {
                           </div>
                         ) : (
                           <>
-                            <button
-                              className="btn-accent hist-btn-open"
-                              onClick={ouvrirMenu}
-                            >Ouvrir →</button>
-                            <button
-                              className="hist-btn-del"
-                              title="Supprimer"
-                              onClick={() => setConfirmDeleteId(item.id)}
-                            >🗑</button>
+                            <button className="btn-accent hist-btn-open" onClick={ouvrirMenu}>Ouvrir →</button>
+                            <button className="hist-btn-del" title="Supprimer" onClick={() => setConfirmDeleteId(item.id)}>🗑</button>
                           </>
                         )}
                         <span className="hist-chevron" onClick={e => { e.stopPropagation(); setExpandedId(isOpen ? null : item.id) }}>
@@ -664,12 +751,9 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    {/* ── Détails expandables ── */}
                     {isOpen && (
                       <div className="hist-body">
-                        {item.menu?.analyse && (
-                          <div className="hist-analyse">{item.menu.analyse}</div>
-                        )}
+                        {item.menu?.analyse && <div className="hist-analyse">{item.menu.analyse}</div>}
                         <div className="hist-jours">
                           {JOURS.map(jour => {
                             const midi = item.menu?.jours?.[jour]?.midi
@@ -703,6 +787,63 @@ export default function Dashboard() {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ══ MODALS ═══════════════════════════════════════════════════════ */}
+      {recipeTarget && (
+        <RecipeModal plat={recipeTarget} cuisine={form.cuisine} couverts={form.couverts} stocks={form.stocks} onClose={() => setRecipeTarget(null)} />
+      )}
+      {showShopping && menu && (
+        <ShoppingListModal menu={menu} couverts={form.couverts} restaurant={form.restaurant} onClose={() => setShowShopping(false)} />
+      )}
+
+      {showPrintMenu && menu && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowPrintMenu(false)}>
+          <div className="menu-carte-box">
+            <div className="menu-carte-head">
+              <div>
+                <div className="menu-carte-resto">{form.restaurant}</div>
+                <div className="menu-carte-sub">Cuisine {form.cuisine} · Menu de la semaine</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn-gen" style={{ marginTop: 0, padding: '10px 20px', fontSize: 13 }} onClick={() => window.print()}>
+                  <Icon3D anim="float" size="1em">📄</Icon3D> Télécharger PDF
+                </button>
+                <button className="modal-close" style={{ position: 'static' }} onClick={() => setShowPrintMenu(false)}>✕</button>
+              </div>
+            </div>
+            <div className="menu-carte-body">
+              {JOURS.map(jour => {
+                const j = menu.jours?.[jour]
+                if (!j?.midi?.plat && !j?.soir?.plat) return null
+                return (
+                  <div key={jour} className="carte-jour">
+                    <div className="carte-jour-nom">{jour}</div>
+                    <div className="carte-services">
+                      {j?.midi?.plat && (
+                        <div className="carte-svc">
+                          <div className="carte-svc-label">☀️ Déjeuner {j.midi.prix && <span>· {j.midi.prix}</span>}</div>
+                          <div className="carte-plat"><em>Entrée</em> {j.midi.entree}</div>
+                          <div className="carte-plat"><em>Plat</em> {j.midi.plat}</div>
+                          <div className="carte-plat"><em>Dessert</em> {j.midi.dessert}</div>
+                        </div>
+                      )}
+                      {j?.soir?.plat && (
+                        <div className="carte-svc">
+                          <div className="carte-svc-label">🌙 Dîner {j.soir.prix && <span>· {j.soir.prix}</span>}</div>
+                          <div className="carte-plat"><em>Entrée</em> {j.soir.entree}</div>
+                          <div className="carte-plat"><em>Plat</em> {j.soir.plat}</div>
+                          <div className="carte-plat"><em>Dessert</em> {j.soir.dessert}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            {menu.conseil && <div className="carte-conseil">💡 {menu.conseil}</div>}
+          </div>
         </div>
       )}
     </>
