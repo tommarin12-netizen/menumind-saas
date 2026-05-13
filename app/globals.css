@@ -255,6 +255,47 @@ select.inp{cursor:pointer;}
 .ws{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:5px 14px;}
 .ws span{width:18px;height:18px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
 
+/* TABS */
+.dash-tabs{display:flex;gap:4px;padding:12px 32px 0;position:relative;z-index:1;max-width:860px;margin:0 auto;}
+.dash-tab{font-size:13px;font-weight:500;padding:9px 20px;background:transparent;border:1px solid var(--border2);color:var(--ink3);cursor:pointer;border-radius:var(--r8) var(--r8) 0 0;border-bottom:none;transition:all .18s;position:relative;bottom:-1px;}
+.dash-tab.on{background:var(--surface);color:var(--ink);border-color:var(--border2);font-weight:600;}
+
+/* PROFILE BADGE */
+.profile-badge{font-size:11px;color:var(--green);background:var(--green-soft);border:1px solid rgba(45,106,79,.2);padding:4px 12px;border-radius:100px;cursor:pointer;transition:all .2s;}
+.profile-badge:hover{background:rgba(199,92,50,.09);color:var(--accent);border-color:rgba(199,92,50,.2);}
+
+/* HISTORIQUE */
+.hist-empty{text-align:center;padding:60px 24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r16);color:var(--ink3);}
+.hist-list{display:flex;flex-direction:column;gap:10px;}
+.hist-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r16);overflow:hidden;transition:box-shadow .2s;}
+.hist-card.open{box-shadow:var(--sh2);}
+.hist-card-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;cursor:pointer;gap:12px;}
+.hist-card-head:hover{background:#fdfaf7;}
+.hist-resto{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:3px;}
+.hist-meta{font-size:12px;color:var(--ink3);}
+.hist-eco{font-size:11px;font-weight:600;color:var(--green);background:var(--green-soft);padding:3px 10px;border-radius:100px;}
+.hist-chevron{font-size:11px;color:var(--ink3);}
+.hist-body{padding:0 20px 18px;border-top:1px solid var(--border);}
+.hist-analyse{font-size:13px;color:var(--ink3);line-height:1.7;padding:14px 0 10px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+.hist-jours{display:flex;gap:6px;flex-wrap:wrap;}
+.hist-jour-pill{font-size:12px;color:var(--ink2);background:var(--surface2);border:1px solid var(--border);padding:5px 12px;border-radius:100px;}
+
+/* IMPRESSION */
+.print-only{display:none;}
+.print-jour{margin-bottom:20px;border-bottom:1px solid #ddd;padding-bottom:16px;}
+.print-jour-title{font-size:16px;font-weight:700;margin-bottom:10px;}
+.print-services{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.print-svc{font-size:13px;line-height:1.8;}
+.print-svc-label{font-weight:600;margin-bottom:4px;}
+.print-conseil{margin-top:20px;padding:12px;background:#f5f5f5;border-radius:8px;font-size:13px;}
+@media print {
+  .print-hide{display:none !important;}
+  .print-only{display:block !important;}
+  .bg-scene,.dash-nav,.dash-tabs,.welcome-banner{display:none !important;}
+  .res-page{padding:0;max-width:100%;}
+  body{background:#fff;}
+}
+
 /* DASH */
 .dash-nav{position:sticky;top:0;z-index:200;height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(247,243,238,.88);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);}
 .dash-content{max-width:800px;margin:0 auto;padding:40px 32px;}
