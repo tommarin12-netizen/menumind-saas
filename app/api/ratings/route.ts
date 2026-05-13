@@ -36,7 +36,7 @@ export async function GET() {
   if (error || !data) return NextResponse.json({ avg: 0, total: 0, top: [] })
 
   const total = data.length
-  const avg = total ? Math.round((data.reduce((s, r) => s + r.stars, 0) / total) * 10) / 10 : 0
+  const avg = total ? Math.round((data.reduce((s: number, r: { stars: number }) => s + r.stars, 0) / total) * 10) / 10 : 0
 
   // Top plats : moyenne pondérée par nb de notes
   const byDish: Record<string, { sum: number; count: number }> = {}

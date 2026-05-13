@@ -12,6 +12,13 @@ Pour chaque demande, tu retournes UNIQUEMENT un JSON valide avec cette structure
   "conseil": "conseil pratique de la semaine pour le restaurateur",
   "economie": "estimation des pertes évitées ex: ~150€ ou null si non estimable",
   "alertes": ["alerte 1 si besoin", "alerte 2"] ou [],
+  "couts": {
+    "cout_moyen_entree": "ex: 1.5-2€",
+    "cout_moyen_plat": "ex: 4-6€",
+    "cout_moyen_dessert": "ex: 1-1.5€",
+    "marge_brute_estimee": "ex: 68-74%",
+    "conseil_rentabilite": "1 phrase sur le plat le plus rentable ou le point d'attention"
+  },
   "propositions": [
     {
       "produit": "nom du produit périssable exactement comme écrit par le restaurateur",

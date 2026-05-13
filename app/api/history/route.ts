@@ -11,16 +11,14 @@ export async function POST(req: NextRequest) {
 
   const { restaurant, cuisine, params, menu } = await req.json()
 
-  const { error } = await supabase.from('menus').insert({
-    user_id: user.id,
-    restaurant,
-    cuisine,
-    params,
-    menu,
-  })
+  const { data: inserted, error } = await supabase
+    .from('menus')
+    .insert({ user_id: user.id, restaurant, cuisine, params, menu })
+    .select('id')
+    .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, id: inserted?.id })
 }
 
 // Récupérer l'historique
