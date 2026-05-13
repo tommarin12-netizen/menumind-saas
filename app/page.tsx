@@ -1,11 +1,14 @@
 'use client'
 import Link from 'next/link'
 import { useState } from 'react'
+import PlanModal from './components/PlanModal'
 
 export default function LandingPage() {
   const [loading, setLoading] = useState<'monthly' | 'annual' | null>(null)
+  const [showModal, setShowModal] = useState(false)
 
   async function handleBuy(plan: 'monthly' | 'annual') {
+    setShowModal(false)
     setLoading(plan)
     try {
       const res = await fetch('/api/checkout', {
@@ -40,7 +43,7 @@ export default function LandingPage() {
         <span className="logo">Menu<em>Mind</em></span>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <Link href="/login" className="btn-ghost">Se connecter</Link>
-          <button className="btn-accent" onClick={() => handleBuy('annual')}>Essayer →</button>
+          <button className="btn-accent" onClick={() => setShowModal(true)}>Essayer →</button>
         </div>
       </nav>
 
@@ -57,7 +60,7 @@ export default function LandingPage() {
           MenuMind analyse votre type de cuisine, la météo, vos stocks et votre budget
           pour générer un menu complet — entrée, plat, dessert — midi et soir, 5 jours sur 5.
         </p>
-        <button className="btn-cta" onClick={() => handleBuy('annual')} disabled={!!loading}>
+        <button className="btn-cta" onClick={() => setShowModal(true)} disabled={!!loading}>
           {loading ? 'Redirection…' : 'Commencer maintenant →'}
         </button>
         <p style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 14 }}>
@@ -167,6 +170,14 @@ export default function LandingPage() {
           <Link href="/login" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Se connecter</Link>
         </p>
       </footer>
+
+      {showModal && (
+        <PlanModal
+          onClose={() => setShowModal(false)}
+          onSelect={handleBuy}
+          loading={loading}
+        />
+      )}
     </>
   )
 }
