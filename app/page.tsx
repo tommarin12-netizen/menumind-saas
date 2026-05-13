@@ -126,17 +126,6 @@ export default function LandingPage() {
               <div className="ratings-stars">{'★'.repeat(Math.round(ratings.avg))}{'☆'.repeat(5 - Math.round(ratings.avg))}</div>
               <div className="ratings-total">{ratings.total} recette{ratings.total > 1 ? 's' : ''} notée{ratings.total > 1 ? 's' : ''}</div>
             </div>
-            {ratings.top.length > 0 && (
-              <div className="ratings-top">
-                {ratings.top.map((r, i) => (
-                  <div key={i} className="ratings-top-item">
-                    <div className="ratings-top-stars">{'★'.repeat(Math.round(r.avg))}</div>
-                    <div className="ratings-top-name">{r.name}</div>
-                    <div className="ratings-top-count">{r.count} avis</div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       )}
