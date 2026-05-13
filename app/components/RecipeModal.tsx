@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Icon3D from './Icon3D'
 
 type Recipe = {
   nom: string
@@ -163,10 +164,10 @@ export default function RecipeModal({ plat, cuisine, couverts, stocks, onClose }
             <>
               {/* Infos rapides */}
               <div className="recipe-infos">
-                <div className="recipe-info"><span>⏱</span><div><strong>{recipe.temps_prep}</strong><div>Préparation</div></div></div>
-                <div className="recipe-info"><span>🔥</span><div><strong>{recipe.temps_cuisson}</strong><div>Cuisson</div></div></div>
-                <div className="recipe-info"><span>📊</span><div><strong>{recipe.difficulte}</strong><div>Difficulté</div></div></div>
-                {couverts && <div className="recipe-info"><span>👥</span><div><strong>{couverts}</strong><div>Couverts</div></div></div>}
+                <div className="recipe-info"><Icon3D anim="spin"   size="1.5em">⏱</Icon3D><div><strong>{recipe.temps_prep}</strong><div>Préparation</div></div></div>
+                <div className="recipe-info"><Icon3D anim="pulse" size="1.5em">🔥</Icon3D><div><strong>{recipe.temps_cuisson}</strong><div>Cuisson</div></div></div>
+                <div className="recipe-info"><Icon3D anim="float" size="1.5em">📊</Icon3D><div><strong>{recipe.difficulte}</strong><div>Difficulté</div></div></div>
+                {couverts && <div className="recipe-info"><Icon3D anim="bounce" size="1.5em">👥</Icon3D><div><strong>{couverts}</strong><div>Couverts</div></div></div>}
               </div>
 
               <div className="recipe-body">
@@ -197,7 +198,7 @@ export default function RecipeModal({ plat, cuisine, couverts, stocks, onClose }
               {/* Conseil chef */}
               {recipe.conseil_chef && (
                 <div className="recipe-conseil">
-                  <span>👨‍🍳</span>
+                  <Icon3D anim="wiggle" size="2em">👨‍🍳</Icon3D>
                   <div>
                     <strong>Conseil du chef</strong>
                     <p>{recipe.conseil_chef}</p>
@@ -208,7 +209,7 @@ export default function RecipeModal({ plat, cuisine, couverts, stocks, onClose }
               {/* Accord vin */}
               {recipe.vin && (
                 <div className="recipe-vin">
-                  <span>🍷</span> {recipe.vin}
+                  <Icon3D anim="float" size="1.3em">🍷</Icon3D> {recipe.vin}
                 </div>
               )}
 
@@ -216,7 +217,7 @@ export default function RecipeModal({ plat, cuisine, couverts, stocks, onClose }
               <div className="recipe-rating-row">
                 {rated ? (
                   <div className="rating-thanks">
-                    {'★'.repeat(userStars)}{'☆'.repeat(5 - userStars)} Merci pour votre avis !
+                    <Icon3D anim="bounce" size="1.2em">⭐</Icon3D> Merci pour votre avis !
                   </div>
                 ) : (
                   <>

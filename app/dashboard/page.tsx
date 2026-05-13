@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import RecipeModal from '@/app/components/RecipeModal'
 import ShoppingListModal from '@/app/components/ShoppingListModal'
+import Icon3D from '@/app/components/Icon3D'
 import { getProduitsSaison, getMoisLabel } from '@/lib/saison'
 
 type Jour = { midi: Service; soir: Service }
@@ -194,10 +195,10 @@ export default function Dashboard() {
       <div className="dash-tabs">
         <div className="dash-tabs-inner">
           <button className={`dash-tab${activeTab === 'generer' ? ' on' : ''}`} onClick={() => setActiveTab('generer')}>
-            ✨ Générer un menu
+            <Icon3D anim="pulse" size="1em">✨</Icon3D> Générer un menu
           </button>
           <button className={`dash-tab${activeTab === 'historique' ? ' on' : ''}`} onClick={() => setActiveTab('historique')}>
-            📋 Historique
+            <Icon3D anim="float" size="1em">📋</Icon3D> Historique
           </button>
         </div>
       </div>
@@ -226,14 +227,14 @@ export default function Dashboard() {
           {/* Widget produits de saison */}
           {saisonProduits.length > 0 && (
             <div className="saison-widget">
-              <div className="saison-title">🌱 En saison en {moisLabel}</div>
+              <div className="saison-title"><Icon3D anim="wiggle" size="1.1em">🌱</Icon3D> En saison en {moisLabel}</div>
               <div className="saison-items">
                 {saisonProduits.map((p, i) => (
                   <div key={i} className="saison-item" onClick={() => {
                     const stocks = form.stocks ? `${form.stocks}, ${p.produit}` : p.produit
                     set('stocks', stocks)
                   }} title="Cliquer pour ajouter aux stocks">
-                    <span>{p.emoji}</span> {p.produit}
+                    <Icon3D anim="float" size="1.3em">{p.emoji}</Icon3D> {p.produit}
                   </div>
                 ))}
               </div>
@@ -333,8 +334,8 @@ export default function Dashboard() {
               <div className="res-sub">{form.restaurant} · Cuisine {form.cuisine}</div>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button className="btn-ghost print-hide" style={{ fontSize: 12 }} onClick={() => setShowShopping(true)}>🛒 Courses</button>
-              <button className="btn-ghost print-hide" style={{ fontSize: 12 }} onClick={() => setShowPrintMenu(true)}>📄 Menu carte</button>
+              <button className="btn-ghost print-hide" style={{ fontSize: 12 }} onClick={() => setShowShopping(true)}><Icon3D anim="bounce" size="1.1em">🛒</Icon3D> Courses</button>
+              <button className="btn-ghost print-hide" style={{ fontSize: 12 }} onClick={() => setShowPrintMenu(true)}><Icon3D anim="float" size="1.1em">📄</Icon3D> Menu carte</button>
               {shareUrl && (
                 <button className="btn-ghost print-hide" style={{ fontSize: 12, color: shareCopied ? 'var(--green)' : undefined }} onClick={() => {
                   navigator.clipboard.writeText(shareUrl)
@@ -365,7 +366,7 @@ export default function Dashboard() {
 
           {menu.couts && (
             <div className="couts-card">
-              <div className="couts-title">💰 Estimation coût matière</div>
+              <div className="couts-title"><Icon3D anim="pulse" size="1.1em">💰</Icon3D> Estimation coût matière</div>
               <div className="couts-grid">
                 <div className="cout-item"><div className="cout-label">Entrée</div><div className="cout-val">{menu.couts.cout_moyen_entree}</div></div>
                 <div className="cout-item"><div className="cout-label">Plat</div><div className="cout-val">{menu.couts.cout_moyen_plat}</div></div>
@@ -373,7 +374,7 @@ export default function Dashboard() {
                 <div className="cout-item hot"><div className="cout-label">Marge brute</div><div className="cout-val">{menu.couts.marge_brute_estimee}</div></div>
               </div>
               {menu.couts.conseil_rentabilite && (
-                <div className="couts-conseil">💡 {menu.couts.conseil_rentabilite}</div>
+                <div className="couts-conseil"><Icon3D anim="float" size="1em">💡</Icon3D> {menu.couts.conseil_rentabilite}</div>
               )}
             </div>
           )}
@@ -381,14 +382,14 @@ export default function Dashboard() {
           {menu.propositions && menu.propositions.length > 0 && (
             <div className="prop-section">
               <div className="prop-header">
-                <span className="prop-title">🧊 Produits périssables écoulés cette semaine</span>
+                <span className="prop-title"><Icon3D anim="spin" size="1.1em">🧊</Icon3D> Produits périssables écoulés cette semaine</span>
                 <span className="prop-badge">{menu.propositions.length} produit{menu.propositions.length > 1 ? 's' : ''} utilisé{menu.propositions.length > 1 ? 's' : ''}</span>
               </div>
               <div className="prop-grid">
                 {menu.propositions.map((p, i) => (
                   <div key={i} className="prop-card">
                     <div className="prop-card-top">
-                      <span className="prop-emoji">{p.emoji}</span>
+                      <Icon3D anim="float" size="2em" className="prop-emoji">{p.emoji}</Icon3D>
                       <div>
                         <div className="prop-produit">{p.produit}</div>
                         <div className="prop-count">Intégré dans <strong>{p.nb_plats} plat{p.nb_plats > 1 ? 's' : ''}</strong></div>
@@ -407,7 +408,7 @@ export default function Dashboard() {
             <div style={{ marginBottom: 16 }}>
               <div className="res-sec-label">Points d&apos;attention</div>
               {menu.alertes.map((a, i) => (
-                <div key={i} style={{ fontSize: 13, color: 'var(--amber)', background: 'var(--amber-soft)', border: '1px solid rgba(154,106,16,.15)', borderRadius: 'var(--r8)', padding: '8px 12px', marginBottom: 6 }}>⚠️ {a}</div>
+                <div key={i} style={{ fontSize: 13, color: 'var(--amber)', background: 'var(--amber-soft)', border: '1px solid rgba(154,106,16,.15)', borderRadius: 'var(--r8)', padding: '8px 12px', marginBottom: 6 }}><Icon3D anim="wiggle" size="1em">⚠️</Icon3D> {a}</div>
               ))}
             </div>
           )}
@@ -427,11 +428,11 @@ export default function Dashboard() {
           {svc && (
             <div className="menu-card print-hide">
               <div className="menu-head">
-                <span className="menu-jour">{jourActif} · {svcActif === 'midi' ? '☀️ Déjeuner' : '🌙 Dîner'}</span>
+                <span className="menu-jour">{jourActif} · {svcActif === 'midi' ? <><Icon3D anim="pulse" size="1em">☀️</Icon3D> Déjeuner</> : <><Icon3D anim="float" size="1em">🌙</Icon3D> Dîner</>}</span>
                 <div className="menu-prix-row">
                   {(svc.cout_matiere || svc.prix) && (
                     <span className="menu-cout">
-                      🧾 {svc.cout_matiere ?? svc.prix}
+                      <Icon3D anim="float" size="1em">🧾</Icon3D> {svc.cout_matiere ?? svc.prix}
                       <span className="menu-prix-label">coût matière</span>
                     </span>
                   )}
@@ -522,7 +523,7 @@ export default function Dashboard() {
                 <div className="menu-carte-sub">Cuisine {form.cuisine} · Menu de la semaine</div>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn-gen" style={{ marginTop: 0, padding: '10px 20px', fontSize: 13 }} onClick={() => window.print()}>📄 Télécharger PDF</button>
+                <button className="btn-gen" style={{ marginTop: 0, padding: '10px 20px', fontSize: 13 }} onClick={() => window.print()}><Icon3D anim="float" size="1em">📄</Icon3D> Télécharger PDF</button>
                 <button className="modal-close" style={{ position: 'static' }} onClick={() => setShowPrintMenu(false)}>✕</button>
               </div>
             </div>
@@ -576,7 +577,7 @@ export default function Dashboard() {
 
           {!historyLoading && history.length === 0 && (
             <div className="hist-empty">
-              <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
+              <Icon3D anim="bounce" size={40}>📋</Icon3D>
               <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 6 }}>Aucun menu sauvegardé</div>
               <div style={{ fontSize: 13, color: 'var(--ink3)' }}>Vos menus apparaîtront ici après chaque génération.</div>
               <button className="btn-accent" style={{ marginTop: 20, fontSize: 13, padding: '10px 24px', borderRadius: 'var(--r8)', border: 'none', cursor: 'pointer' }} onClick={() => setActiveTab('generer')}>

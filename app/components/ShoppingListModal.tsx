@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Icon3D from './Icon3D'
 
 type Item = { produit: string; quantite: string; note?: string }
 type Category = { nom: string; emoji: string; items: Item[] }
@@ -51,13 +52,13 @@ export default function ShoppingListModal({ menu, couverts, restaurant, onClose 
         <div className="shop-head">
           <div>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 4 }}>
-              🛒 Liste de courses
+              <Icon3D anim="bounce" size="1.2em">🛒</Icon3D> Liste de courses
             </div>
             <h2 style={{ margin: 0, fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 400 }}>{restaurant}</h2>
             {list?.meta && (
               <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 4, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <span>👥 <strong style={{ color: 'var(--ink2)' }}>{list.meta.couverts_par_service}</strong> cvts/service</span>
-                <span>📅 <strong style={{ color: 'var(--ink2)' }}>{list.meta.nb_services}</strong> services</span>
+                <span><Icon3D anim="bounce" size="1em">👥</Icon3D> <strong style={{ color: 'var(--ink2)' }}>{list.meta.couverts_par_service}</strong> cvts/service</span>
+                <span><Icon3D anim="float" size="1em">📅</Icon3D> <strong style={{ color: 'var(--ink2)' }}>{list.meta.nb_services}</strong> services</span>
                 <span>= <strong style={{ color: 'var(--accent)' }}>{list.meta.total_couverts}</strong> couverts total</span>
               </div>
             )}
@@ -82,7 +83,7 @@ export default function ShoppingListModal({ menu, couverts, restaurant, onClose 
         {/* Calcul badge */}
         {list?.meta && (
           <div style={{ margin: '0 16px 4px', padding: '8px 14px', background: 'rgba(154,106,16,.08)', border: '1px solid rgba(154,106,16,.18)', borderRadius: 10, fontSize: 12, color: 'var(--amber)' }}>
-            ⚖️ Quantités calculées pour <strong>{list.meta.couverts_par_service} couverts × {list.meta.nb_services} services</strong> + 10% de marge
+            <Icon3D anim="float" size="1.1em">⚖️</Icon3D> Quantités calculées pour <strong>{list.meta.couverts_par_service} couverts × {list.meta.nb_services} services</strong> + 10% de marge
           </div>
         )}
 
@@ -100,7 +101,7 @@ export default function ShoppingListModal({ menu, couverts, restaurant, onClose 
             {list.categories.filter(c => c.items.length > 0).map((cat, ci) => (
               <div key={ci} className="shop-cat">
                 <div className="shop-cat-title">
-                  <span>{cat.emoji}</span> {cat.nom}
+                  <Icon3D anim="float" size="1.2em">{cat.emoji}</Icon3D> {cat.nom}
                   <span className="shop-cat-count">{cat.items.length}</span>
                 </div>
                 {cat.items.map((item, ii) => {
