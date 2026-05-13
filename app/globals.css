@@ -581,6 +581,19 @@ select.inp{cursor:pointer;}
   .res-page{padding:24px 16px;}
   .form-wrap{padding:24px 20px;border-radius:var(--r20);}
   .welcome-banner{padding:0 16px;margin-top:16px;}
+  /* Historique mobile */
+  .hist-card-head{padding:14px 16px;gap:10px;}
+  .hist-actions{gap:5px;}
+  .hist-btn-open{font-size:11px !important;padding:5px 10px !important;}
+  .hist-confirm-delete span{display:none;} /* masquer "Supprimer ?" sur mobile */
+  /* Résultats mobile */
+  .menu-head{flex-direction:column;align-items:flex-start;gap:8px;}
+  .menu-prix-row{width:100%;}
+  /* Modals mobile */
+  .recipe-modal,.shop-modal,.menu-carte-box{border-radius:var(--r16) var(--r16) 0 0;max-height:94vh;}
+  .modal-overlay{align-items:flex-end;}
+  /* Login/success mobile */
+  .login-card,.success-card{padding:32px 24px;border-radius:var(--r20);}
 }
 
 /* ── SAISON WIDGET ─────────────────────────────── */

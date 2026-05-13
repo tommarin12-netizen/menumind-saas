@@ -189,9 +189,16 @@ export default function LandingPage() {
       </div>
 
       <footer style={{ borderTop: '1px solid var(--border)', padding: '28px 32px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
-        <p style={{ fontSize: 12, color: 'var(--ink3)' }}>
-          © {new Date().getFullYear()} MenuMind ·{' '}
-          <Link href="/login" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Se connecter</Link>
+        <p style={{ fontSize: 12, color: 'var(--ink3)', lineHeight: 2 }}>
+          © {new Date().getFullYear()} MenuMind
+          {' · '}
+          <Link href="/login" style={{ color: 'var(--ink3)', textDecoration: 'none' }}>Se connecter</Link>
+          {' · '}
+          <Link href="/cgu" style={{ color: 'var(--ink3)', textDecoration: 'none' }}>CGU</Link>
+          {' · '}
+          <Link href="/confidentialite" style={{ color: 'var(--ink3)', textDecoration: 'none' }}>Confidentialité</Link>
+          {' · '}
+          <a href="mailto:contact@menumind.fr" style={{ color: 'var(--ink3)', textDecoration: 'none' }}>Contact</a>
         </p>
       </footer>
 

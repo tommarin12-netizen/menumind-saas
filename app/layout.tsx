@@ -1,10 +1,24 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import SplashScreen from './components/SplashScreen'
 
 export const metadata: Metadata = {
   title: 'MenuMind — Optimisez votre menu en 30 secondes',
   description: 'Intelligence artificielle pour restaurateurs : générez un menu de la semaine adapté à votre cuisine, la météo et votre budget.',
+  openGraph: {
+    title: 'MenuMind — Optimisez votre menu en 30 secondes',
+    description: 'Générez un menu de la semaine adapté à votre cuisine, la météo et votre budget.',
+    url: 'https://menumind.fr',
+    siteName: 'MenuMind',
+    locale: 'fr_FR',
+    type: 'website',
+  },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
