@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
 
   const hashedToken = linkData?.properties?.hashed_token
   const loginUrl = hashedToken
-    ? `${origin}/auth/callback?token_hash=${hashedToken}&type=magiclink&next=/dashboard`
+    ? `${origin}/auth/verify?token_hash=${hashedToken}&type=magiclink&next=/dashboard`
     : `${origin}/login`
   const planLabel = plan === 'annual' ? 'Annuel' : 'Mensuel'
 

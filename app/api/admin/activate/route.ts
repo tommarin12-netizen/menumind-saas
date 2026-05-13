@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   // On construit l'URL directement avec hashed_token → pas de redirection Supabase
   const hashedToken = linkData?.properties?.hashed_token
   const loginUrl = hashedToken
-    ? `${origin}/auth/callback?token_hash=${hashedToken}&type=magiclink&next=/dashboard`
+    ? `${origin}/auth/verify?token_hash=${hashedToken}&type=magiclink&next=/dashboard`
     : `${origin}/login`
 
   // 3. Email
