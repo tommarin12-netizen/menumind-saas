@@ -1,27 +1,24 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 
 export default function GodMode() {
-  const [status, setStatus] = useState('Connexion en cours…')
+  const [status, setStatus] = useState('Activation en cours…')
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
-    async function login() {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: 'tom.marin12@gmail.com',
-        password: 'MenuMindTom2024!',
+    // Appelle l'endpoint admin qui crée/met à jour le compte + génère un magic link
+    fetch('/api/admin/magic?token=mm_creator_tom_2024')
+      .then(r => r.json())
+      .then(data => {
+        if (data.url) {
+          setStatus('Compte activé ✅ Redirection…')
+          window.location.href = data.url
+        } else {
+          setStatus(`Erreur : ${data.error ?? 'inconnue'}`)
+        }
       })
-      if (error) {
-        setStatus(`Erreur : ${error.message}`)
-      } else {
-        setStatus('Connecté ✅ Redirection…')
-        router.push('/dashboard')
-      }
-    }
-    login()
+      .catch(() => setStatus('Erreur réseau'))
   }, [])
 
   return (
