@@ -580,23 +580,56 @@ export default function Dashboard() {
                 const dateStr = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
                 const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
                 const isOpen = expandedId === item.id
-                const lundi = item.menu?.jours?.Lundi
+
+                // Plats du lundi midi pour aperçu
+                const apercu = JOURS
+                  .map(j => item.menu?.jours?.[j]?.midi?.plat)
+                  .filter(Boolean)
+                  .slice(0, 3)
+
+                function ouvrirMenu() {
+                  // Charge le menu en mémoire + les paramètres → affiche la vue résultats
+                  setMenu(item.menu)
+                  setJourActif('Lundi')
+                  setSvcActif('midi')
+                  if (item.params) setForm(f => ({ ...f, ...item.params }))
+                  setShareUrl(`${window.location.origin}/menu/${item.id}`)
+                  setShareCopied(false)
+                  setActiveTab('generer')
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }
 
                 return (
                   <div key={item.id} className={`hist-card${isOpen ? ' open' : ''}`}>
+                    {/* En-tête cliquable */}
                     <div className="hist-card-head" onClick={() => setExpandedId(isOpen ? null : item.id)}>
-                      <div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <div className="hist-resto">{item.restaurant}</div>
                         <div className="hist-meta">{item.cuisine} · {dateStr} à {timeStr}</div>
+                        {/* Aperçu des plats en ligne */}
+                        {apercu.length > 0 && (
+                          <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {apercu.join(' · ')}
+                          </div>
+                        )}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                         {item.menu?.economie && (
                           <span className="hist-eco">{item.menu.economie} épargnés</span>
                         )}
+                        {/* Bouton Ouvrir visible directement */}
+                        <button
+                          className="btn-accent"
+                          style={{ fontSize: 12, padding: '6px 14px', borderRadius: 'var(--r8)' }}
+                          onClick={e => { e.stopPropagation(); ouvrirMenu() }}
+                        >
+                          Ouvrir →
+                        </button>
                         <span className="hist-chevron">{isOpen ? '▲' : '▼'}</span>
                       </div>
                     </div>
 
+                    {/* Détails expandables */}
                     {isOpen && (
                       <div className="hist-body">
                         {item.menu?.analyse && (
@@ -605,19 +638,35 @@ export default function Dashboard() {
                         <div className="hist-jours">
                           {JOURS.map(jour => {
                             const midi = item.menu?.jours?.[jour]?.midi
-                            return midi ? (
+                            const soir = item.menu?.jours?.[jour]?.soir
+                            return (midi?.plat || soir?.plat) ? (
                               <div key={jour} className="hist-jour-pill">
-                                <strong>{jour}</strong> · {midi.plat}
+                                <strong>{jour}</strong>
+                                {midi?.plat && <span> ☀️ {midi.plat}</span>}
+                                {soir?.plat && <span> 🌙 {soir.plat}</span>}
                               </div>
                             ) : null
                           })}
                         </div>
-                        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                        <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+                          <button
+                            className="btn-gen"
+                            style={{ flex: 1, marginTop: 0, padding: '11px 20px', fontSize: 13 }}
+                            onClick={ouvrirMenu}
+                          >
+                            Ouvrir ce menu →
+                          </button>
                           <button className="btn-ghost" style={{ fontSize: 12 }} onClick={() => {
-                            if (item.params) setForm({ ...form, ...item.params })
+                            if (item.params) setForm(f => ({ ...f, ...item.params }))
+                            setMenu(null)
                             setActiveTab('generer')
                           }}>
-                            ↺ Régénérer avec ces paramètres
+                            ↺ Régénérer
+                          </button>
+                          <button className="btn-ghost" style={{ fontSize: 12 }} onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/menu/${item.id}`)
+                          }}>
+                            🔗 Copier le lien
                           </button>
                         </div>
                       </div>
