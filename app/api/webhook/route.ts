@@ -70,7 +70,10 @@ export async function POST(req: NextRequest) {
       email,
       options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/dashboard` },
     })
-    const loginUrl = linkData?.properties?.action_link ?? `${process.env.NEXT_PUBLIC_APP_URL}/login`
+    const hashedToken = linkData?.properties?.hashed_token
+    const loginUrl = hashedToken
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?token_hash=${hashedToken}&type=magiclink&next=/dashboard`
+      : `${process.env.NEXT_PUBLIC_APP_URL}/login`
     const planLabel = plan === 'annual' ? 'Annuel' : 'Mensuel'
 
     await resend.emails.send({

@@ -53,7 +53,12 @@ export async function POST(req: NextRequest) {
     options: { redirectTo: `${origin}/auth/callback?next=/dashboard` },
   })
   if (linkErr) return NextResponse.json({ error: linkErr.message }, { status: 500 })
-  const loginUrl = linkData?.properties?.action_link ?? `${origin}/login`
+
+  // On construit l'URL directement avec hashed_token → pas de redirection Supabase
+  const hashedToken = linkData?.properties?.hashed_token
+  const loginUrl = hashedToken
+    ? `${origin}/auth/callback?token_hash=${hashedToken}&type=magiclink&next=/dashboard`
+    : `${origin}/login`
 
   // 3. Email
   const { data: emailData, error: emailErr } = await resend.emails.send({

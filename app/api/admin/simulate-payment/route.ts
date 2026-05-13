@@ -62,7 +62,10 @@ export async function POST(req: NextRequest) {
   })
   if (linkErr) return NextResponse.json({ error: linkErr.message }, { status: 500 })
 
-  const loginUrl = linkData?.properties?.action_link ?? `${origin}/login`
+  const hashedToken = linkData?.properties?.hashed_token
+  const loginUrl = hashedToken
+    ? `${origin}/auth/callback?token_hash=${hashedToken}&type=magiclink&next=/dashboard`
+    : `${origin}/login`
   const planLabel = plan === 'annual' ? 'Annuel' : 'Mensuel'
 
   // 3. Envoyer l'email (même template que le vrai webhook)

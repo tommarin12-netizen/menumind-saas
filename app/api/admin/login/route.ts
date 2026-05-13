@@ -119,7 +119,11 @@ export async function POST(req: NextRequest) {
     options: { redirectTo: `${origin}/auth/callback?next=/dashboard` },
   })
   if (linkErr) return NextResponse.json({ error: linkErr.message }, { status: 500 })
-  const loginUrl = linkData?.properties?.action_link ?? `${origin}/login`
+
+  const hashedToken = linkData?.properties?.hashed_token
+  const loginUrl = hashedToken
+    ? `${origin}/auth/callback?token_hash=${hashedToken}&type=magiclink&next=/dashboard`
+    : `${origin}/login`
 
   // Envoyer l'email
   await resend.emails.send({
