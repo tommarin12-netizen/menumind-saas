@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
   const loginUrl = linkData?.properties?.action_link ?? `${origin}/login`
 
   // 3. Email
-  await resend.emails.send({
+  const { data: emailData, error: emailErr } = await resend.emails.send({
     from: `MenuMind <${process.env.RESEND_FROM_EMAIL}>`,
     to: email,
     subject: 'Bienvenue sur MenuMind - Votre acces est pret',
@@ -68,5 +68,8 @@ export async function POST(req: NextRequest) {
     </div>`,
   })
 
-  return NextResponse.json({ ok: true, email, plan, loginUrl })
+  return NextResponse.json({
+    ok: true, email, plan, loginUrl,
+    resend: emailErr ? { error: emailErr.message, from: process.env.RESEND_FROM_EMAIL } : { id: emailData?.id, from: process.env.RESEND_FROM_EMAIL },
+  })
 }
