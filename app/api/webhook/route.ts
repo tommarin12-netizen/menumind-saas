@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     const { data: linkData } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email,
-      options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard` },
+      options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/dashboard` },
     })
     const loginUrl = linkData?.properties?.action_link ?? `${process.env.NEXT_PUBLIC_APP_URL}/login`
     const planLabel = plan === 'annual' ? 'Annuel' : 'Mensuel'
