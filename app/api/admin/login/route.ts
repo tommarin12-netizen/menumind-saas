@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 const SECRET = 'mm_creator_tom_2024'
 const CREATOR_EMAIL = 'tom.marin12@gmail.com'
@@ -12,24 +13,42 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
-  const supabase = createAdminClient()
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!url || !key) {
+    return NextResponse.json({
+      error: 'Env vars manquantes',
+      url: !!url,
+      key: !!key,
+    }, { status: 500 })
+  }
+
+  const supabase = createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
 
   const origin = process.env.NEXT_PUBLIC_APP_URL ||
     `${req.headers.get('x-forwarded-proto') ?? 'https'}://${req.headers.get('host')}`
 
-  // Crée le user s'il n'existe pas
+  // Récupère ou crée le user
   let userId: string
-  const { data: existing } = await supabase.auth.admin.getUserByEmail(CREATOR_EMAIL).catch(() => ({ data: null }))
+  const { data: listData, error: listErr } = await supabase.auth.admin.listUsers()
+  if (listErr) {
+    return NextResponse.json({ error: `listUsers: ${listErr.message}` }, { status: 500 })
+  }
 
-  if (existing?.user) {
-    userId = existing.user.id
+  const existing = listData?.users?.find(u => u.email === CREATOR_EMAIL)
+
+  if (existing) {
+    userId = existing.id
   } else {
     const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
       email: CREATOR_EMAIL,
       email_confirm: true,
     })
     if (createErr || !newUser?.user) {
-      return NextResponse.json({ error: `Création user: ${createErr?.message}` }, { status: 500 })
+      return NextResponse.json({ error: `createUser: ${createErr?.message}` }, { status: 500 })
     }
     userId = newUser.user.id
   }
