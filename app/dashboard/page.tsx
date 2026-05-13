@@ -5,11 +5,18 @@ import { createClient } from '@/lib/supabase/client'
 
 type Jour = { midi: Service; soir: Service }
 type Service = { entree: string; plat: string; dessert: string; prix?: string }
+type Proposition = {
+  produit: string
+  emoji: string
+  nb_plats: number
+  plats: string[]
+}
 type MenuData = {
   analyse: string
   conseil?: string
   economie?: string
   alertes?: string[]
+  propositions?: Proposition[]
   jours: { [k: string]: Jour }
 }
 
@@ -201,6 +208,35 @@ export default function Dashboard() {
               <div>
                 <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--green)' }}>{menu.economie}</div>
                 <div style={{ fontSize: 12, color: 'var(--ink3)' }}>de pertes estimées évitées</div>
+              </div>
+            </div>
+          )}
+
+          {menu.propositions && menu.propositions.length > 0 && (
+            <div className="prop-section">
+              <div className="prop-header">
+                <span className="prop-title">🧊 Produits périssables écoulés cette semaine</span>
+                <span className="prop-badge">{menu.propositions.length} produit{menu.propositions.length > 1 ? 's' : ''} utilisé{menu.propositions.length > 1 ? 's' : ''}</span>
+              </div>
+              <div className="prop-grid">
+                {menu.propositions.map((p, i) => (
+                  <div key={i} className="prop-card">
+                    <div className="prop-card-top">
+                      <span className="prop-emoji">{p.emoji}</span>
+                      <div>
+                        <div className="prop-produit">{p.produit}</div>
+                        <div className="prop-count">
+                          Intégré dans <strong>{p.nb_plats} plat{p.nb_plats > 1 ? 's' : ''}</strong>
+                        </div>
+                      </div>
+                    </div>
+                    <ul className="prop-plats">
+                      {p.plats.map((plat, j) => (
+                        <li key={j}>↳ {plat}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
             </div>
           )}

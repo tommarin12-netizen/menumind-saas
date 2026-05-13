@@ -10,27 +10,37 @@ Pour chaque demande, tu retournes UNIQUEMENT un JSON valide avec cette structure
 {
   "analyse": "analyse globale du menu en 2-3 phrases (rentabilité, cohérence, adaptation)",
   "conseil": "conseil pratique de la semaine pour le restaurateur",
-  "economie": "estimation des pertes évitées ex: 15-20% ou null si non estimable",
+  "economie": "estimation des pertes évitées ex: ~150€ ou null si non estimable",
   "alertes": ["alerte 1 si besoin", "alerte 2"] ou [],
+  "propositions": [
+    {
+      "produit": "nom du produit périssable exactement comme écrit par le restaurateur",
+      "emoji": "emoji représentant ce produit",
+      "nb_plats": 3,
+      "plats": ["Nom du plat — Lundi midi", "Nom du plat — Mercredi soir"]
+    }
+  ],
   "jours": {
     "Lundi": {
       "midi": { "entree": "nom du plat", "plat": "nom du plat", "dessert": "nom du plat", "prix": "fourchette ex: 14-16€" },
       "soir": { "entree": "nom du plat", "plat": "nom du plat", "dessert": "nom du plat", "prix": "fourchette ex: 18-22€" }
     },
-    "Mardi": { "midi": {...}, "soir": {...} },
-    "Mercredi": { "midi": {...}, "soir": {...} },
-    "Jeudi": { "midi": {...}, "soir": {...} },
-    "Vendredi": { "midi": {...}, "soir": {...} }
+    "Mardi": { "midi": {}, "soir": {} },
+    "Mercredi": { "midi": {}, "soir": {} },
+    "Jeudi": { "midi": {}, "soir": {} },
+    "Vendredi": { "midi": {}, "soir": {} }
   }
 }
 
 Règles :
+- Le champ "propositions" liste CHAQUE produit périssable/stock mentionné par le restaurateur, avec tous les plats de la semaine qui l'utilisent
+- Si aucun stock n'est mentionné, "propositions" = []
 - Variété entre les jours (pas de répétitions)
 - Cohérence avec le type de cuisine indiqué
 - Tenir compte de la météo pour adapter les plats (chauds/légers)
 - Respecter les allergènes à exclure
 - Optimiser selon le budget matière
-- Utiliser les stocks à écouler en priorité
+- Utiliser les stocks à écouler en priorité dans un maximum de plats
 - Noms de plats professionnels et appétissants
 - Retourne UNIQUEMENT le JSON, sans texte avant ou après`
 
