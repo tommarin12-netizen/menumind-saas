@@ -589,18 +589,23 @@ export default function Dashboard() {
             <div className="hist-list">
               {history.map(item => {
                 const date = new Date(item.created_at)
-                const dateStr = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+                // Format court : "mer. 13 mai · 14:52"
+                const dateStr = date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
                 const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
                 const isOpen = expandedId === item.id
 
-                // Plats du lundi midi pour aperçu
+                // Plats aperçu (3 premiers midis)
                 const apercu = JOURS
                   .map(j => item.menu?.jours?.[j]?.midi?.plat)
                   .filter(Boolean)
                   .slice(0, 3)
 
+                // Économie : garder seulement le montant avant la parenthèse "~280€ (détail...)"
+                const economieCourt = item.menu?.economie
+                  ? item.menu.economie.replace(/\s*\(.*\)/, '').trim()
+                  : null
+
                 function ouvrirMenu() {
-                  // Charge le menu en mémoire + les paramètres → affiche la vue résultats
                   setMenu(item.menu)
                   setJourActif('Lundi')
                   setSvcActif('midi')
@@ -613,58 +618,52 @@ export default function Dashboard() {
 
                 return (
                   <div key={item.id} className={`hist-card${isOpen ? ' open' : ''}`}>
-                    {/* En-tête cliquable */}
+
+                    {/* ── En-tête ── */}
                     <div className="hist-card-head" onClick={() => setExpandedId(isOpen ? null : item.id)}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className="hist-resto">{item.restaurant}</div>
-                        <div className="hist-meta">{item.cuisine} · {dateStr} à {timeStr}</div>
-                        {/* Aperçu des plats en ligne */}
+
+                      {/* Colonne info (gauche) */}
+                      <div className="hist-info">
+                        <div className="hist-row-top">
+                          <span className="hist-resto">{item.restaurant}</span>
+                          {economieCourt && (
+                            <span className="hist-eco">{economieCourt} épargnés</span>
+                          )}
+                        </div>
+                        <div className="hist-meta">{item.cuisine} · {dateStr} · {timeStr}</div>
                         {apercu.length > 0 && (
-                          <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {apercu.join(' · ')}
-                          </div>
+                          <div className="hist-apercu">{apercu.join(' · ')}</div>
                         )}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                        {item.menu?.economie && (
-                          <span className="hist-eco">{item.menu.economie} épargnés</span>
-                        )}
+
+                      {/* Colonne actions (droite) */}
+                      <div className="hist-actions" onClick={e => e.stopPropagation()}>
                         {confirmDeleteId === item.id ? (
-                          /* Confirmation inline */
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
-                            <span style={{ fontSize: 12, color: 'var(--ink2)', fontWeight: 500 }}>Supprimer ?</span>
-                            <button
-                              onClick={() => deleteMenu(item.id)}
-                              style={{ fontSize: 12, padding: '5px 12px', background: '#e63946', color: '#fff', border: 'none', borderRadius: 'var(--r8)', cursor: 'pointer', fontWeight: 600 }}
-                            >Oui</button>
-                            <button
-                              onClick={() => setConfirmDeleteId(null)}
-                              style={{ fontSize: 12, padding: '5px 12px', background: 'rgba(0,0,0,.06)', color: 'var(--ink2)', border: 'none', borderRadius: 'var(--r8)', cursor: 'pointer' }}
-                            >Non</button>
+                          <div className="hist-confirm-delete">
+                            <span>Supprimer&nbsp;?</span>
+                            <button className="hist-del-yes" onClick={() => deleteMenu(item.id)}>Oui</button>
+                            <button className="hist-del-no" onClick={() => setConfirmDeleteId(null)}>Non</button>
                           </div>
                         ) : (
                           <>
-                            {/* Bouton Ouvrir visible directement */}
                             <button
-                              className="btn-accent"
-                              style={{ fontSize: 12, padding: '6px 14px', borderRadius: 'var(--r8)' }}
-                              onClick={e => { e.stopPropagation(); ouvrirMenu() }}
-                            >
-                              Ouvrir →
-                            </button>
-                            {/* Bouton supprimer */}
+                              className="btn-accent hist-btn-open"
+                              onClick={ouvrirMenu}
+                            >Ouvrir →</button>
                             <button
-                              title="Supprimer ce menu"
-                              onClick={e => { e.stopPropagation(); setConfirmDeleteId(item.id) }}
-                              style={{ fontSize: 14, padding: '5px 9px', background: 'rgba(230,57,70,.08)', color: '#e63946', border: '1px solid rgba(230,57,70,.2)', borderRadius: 'var(--r8)', cursor: 'pointer', lineHeight: 1 }}
+                              className="hist-btn-del"
+                              title="Supprimer"
+                              onClick={() => setConfirmDeleteId(item.id)}
                             >🗑</button>
                           </>
                         )}
-                        <span className="hist-chevron">{isOpen ? '▲' : '▼'}</span>
+                        <span className="hist-chevron" onClick={e => { e.stopPropagation(); setExpandedId(isOpen ? null : item.id) }}>
+                          {isOpen ? '▲' : '▼'}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Détails expandables */}
+                    {/* ── Détails expandables ── */}
                     {isOpen && (
                       <div className="hist-body">
                         {item.menu?.analyse && (
@@ -683,26 +682,18 @@ export default function Dashboard() {
                             ) : null
                           })}
                         </div>
-                        <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
-                          <button
-                            className="btn-gen"
-                            style={{ flex: 1, marginTop: 0, padding: '11px 20px', fontSize: 13 }}
-                            onClick={ouvrirMenu}
-                          >
+                        <div className="hist-body-actions">
+                          <button className="btn-gen" style={{ flex: 1, marginTop: 0 }} onClick={ouvrirMenu}>
                             Ouvrir ce menu →
                           </button>
-                          <button className="btn-ghost" style={{ fontSize: 12 }} onClick={() => {
+                          <button className="btn-ghost" onClick={() => {
                             if (item.params) setForm(f => ({ ...f, ...item.params }))
                             setMenu(null)
                             setActiveTab('generer')
-                          }}>
-                            ↺ Régénérer
-                          </button>
-                          <button className="btn-ghost" style={{ fontSize: 12 }} onClick={() => {
+                          }}>↺ Régénérer</button>
+                          <button className="btn-ghost" onClick={() => {
                             navigator.clipboard.writeText(`${window.location.origin}/menu/${item.id}`)
-                          }}>
-                            🔗 Copier le lien
-                          </button>
+                          }}>🔗 Copier le lien</button>
                         </div>
                       </div>
                     )}
