@@ -28,8 +28,12 @@ export async function GET(req: NextRequest) {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
-  const origin = process.env.NEXT_PUBLIC_APP_URL ||
-    `${req.headers.get('x-forwarded-proto') ?? 'https'}://${req.headers.get('host')}`
+  // Priorité : header host (toujours correct sur Vercel), fallback env var
+  const host = req.headers.get('host') ?? ''
+  const proto = req.headers.get('x-forwarded-proto') ?? 'https'
+  const origin = host && !host.includes('localhost')
+    ? `${proto}://${host}`
+    : (process.env.NEXT_PUBLIC_APP_URL ?? 'https://menumind-saas-fh4c.vercel.app')
 
   // Récupère ou crée le user
   let userId: string
