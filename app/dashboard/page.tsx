@@ -180,12 +180,14 @@ export default function Dashboard() {
 
       {/* Tabs */}
       <div className="dash-tabs">
-        <button className={`dash-tab${activeTab === 'generer' ? ' on' : ''}`} onClick={() => setActiveTab('generer')}>
-          ✨ Générer un menu
-        </button>
-        <button className={`dash-tab${activeTab === 'historique' ? ' on' : ''}`} onClick={() => setActiveTab('historique')}>
-          📋 Historique
-        </button>
+        <div className="dash-tabs-inner">
+          <button className={`dash-tab${activeTab === 'generer' ? ' on' : ''}`} onClick={() => setActiveTab('generer')}>
+            ✨ Générer un menu
+          </button>
+          <button className={`dash-tab${activeTab === 'historique' ? ' on' : ''}`} onClick={() => setActiveTab('historique')}>
+            📋 Historique
+          </button>
+        </div>
       </div>
 
       {firstVisit && activeTab === 'generer' && (
